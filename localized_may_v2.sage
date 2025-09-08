@@ -56,6 +56,7 @@ class MayE1:
         self.minneg_monomials = {}
         self.monomials = {}
         self.d1_matrices = {}
+        self.degree_list = []
         self.complex = self.make_chain_complex()
         self.smith_differentials = {}
         self.smith_isomorphism = {}
@@ -301,6 +302,7 @@ class MayE1:
                 s_max = math.ceil(line_height + 1)
             for s in range(s_min, s_max):
                 self.d1_matrix((ts, s))
+                self.degree_list.append((ts, s))
         # Clean and pad the dictionary to make the ChainComplex constructor happy
         degrees = list(self.d1_matrices.keys())
         for degree in degrees:
@@ -415,7 +417,7 @@ class MayE1:
         result = self.vector_polynomial(self.homology_projection((ts, s)) * self.polynomial_vector(polynomial), (ts, s))
         return result
 
-May = MayE1(0, 0, 10, 5, generator_ts_cap = 150)
+May = MayE1(3, 0, 10, 5, generator_ts_cap = 150)
 
 def run_basic_tests():
     print([f"{variable} : {May.compute_monomial_d1(variable)}" for variable in May.gens])
@@ -425,10 +427,11 @@ def run_basic_tests():
 
 
 def run_d1_tests():
-    print(f"d1 matrix in degree (10, -1): {May.d1_matrix((10, -1))}")
+    
     works = True
-    for monomial_list in list(May.monomials.values()):
-        for monomial in monomial_list:
+    for degree_pair in May.degree_list:
+        print(f"d1 test {degree_pair}")
+        for monomial in May.monomials_in_degree(degree_pair):
             if May.d1(monomial) != May.matrix_d1(monomial):
                 works = False
                 print(monomial)
@@ -438,6 +441,7 @@ def run_smith_tests():
     works = True
     differential_degree = May.grading_group((-1, 1))
     for degree in May.smith_isomorphism.keys():
+        print(f"Smith test {degree}")
         if degree - differential_degree in May.smith_isomorphism.keys():
             if May.smith_isomorphism[degree] * May.complex.differential(degree - differential_degree) != May.smith_complex.differential(degree - differential_degree) * May.smith_isomorphism[degree - differential_degree]:
                 works = False
