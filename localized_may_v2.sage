@@ -1,5 +1,6 @@
 import math
-import random
+import os
+import csv
 class MayE1:
 
     def __init__(self, localizaton_amount : int, ts_min : int, ts_max : int, distance_to_line : int, generator_ts_cap : int = 150) -> None:
@@ -45,8 +46,13 @@ class MayE1:
 
         # Upper boundary line parameters
         self.base_negative_ts = sum([self.variable_ts_degrees[variable] for variable in self.localized_variables])
-        self.slope = 1 / self.variable_ts_degrees[self.positive_variables[0]]
-        self.constant_term = - self.localization_amount - self.slope * self.base_negative_ts 
+        self.positive_slope = 1 / self.variable_ts_degrees[self.positive_variables[0]]
+        if localizaton_amount > 1:
+            self.negative_slope = 1 / max([-self.variable_ts_degrees[variable] for variable in self.localized_variables])
+        else:
+            self.negative_slope = 1
+        self.positive_constant_term = - self.localization_amount - self.positive_slope * self.base_negative_ts
+        self.negative_constant_term = - self.localization_amount - self.negative_slope * self.base_negative_ts
 
         self.base_ring = Integers(2)
         self.grading_group = AdditiveAbelianGroup((0, 0))
@@ -62,6 +68,7 @@ class MayE1:
         self.smith_isomorphism = {}
         self.smith_complex, self.smith_isomorphism, self.smith_isomorphism_inverse = self.make_smith_complex()
         self.homology_projections = self.make_homology_projections()
+        self.homology = self.compute_homology()
         
     
     def ts_degree(self, polynomial) -> int:
@@ -104,13 +111,17 @@ class MayE1:
     
 
     def line_height(self, ts_degree):
-        return self.slope * ts_degree + self.constant_term
+        if ts_degree >= self.base_negative_ts:
+            result = self.positive_slope * ts_degree + self.negative_constant_term
+        else:
+            result = self.negative_slope * ts_degree + self.negative_constant_term
+        return result
 
 
     def above_line(self, degree_pair):
         ts, s = degree_pair
         if self.localization_amount == 0:
-            return s > 2 * self.ts_max - ts + 1
+            return s > ts
         else:
             return s - self.line_height(ts) > 0.000001
 
@@ -244,15 +255,18 @@ class MayE1:
         ts, s = degree_pair
         monomials = self.minneg_monomials_in_degree(degree_pair)
         if self.localization_amount == 0:
-            for i in range(1, s):
-                monomials += [self.nonnegative_variables[0]^(s - i) * monomial for monomial in self.minneg_monomials_in_degree((ts, i))]
+            if ts == 0:
+                monomials = [self.gens[0]^s]
+            else:
+                for i in range(1, s):
+                    monomials += [self.nonnegative_variables[0]^(s - i) * monomial for monomial in self.minneg_monomials_in_degree((ts, i))]
             return sorted(list(set(monomials)))
         else:
             variables_to_multiply = self.localized_variables
         
         for variable in variables_to_multiply:
             new_ts, new_s = ts - self.variable_ts_degrees[variable], s - self.variable_s_degrees[variable]
-            if self.above_line((new_ts, new_s)) or (self.localization_amount == 0 and s < 0):
+            if self.above_line((new_ts, new_s)) or (self.localization_amount == 0 and (s < 0 or s > 2 * self.ts_max - ts + 1)):
                 continue
             else:
                 monomials += [variable * monomial for monomial in self.monomials_in_degree((new_ts, new_s))]
@@ -296,10 +310,10 @@ class MayE1:
             line_height = self.line_height(ts)
             if self.localization_amount == 0:
                 s_min = 0
-                s_max = 2 * self.ts_max - ts + 1
+                s_max = 2 * self.ts_max - ts + 2
             else: 
                 s_min = math.floor(line_height) - self.distance_to_line - 1
-                s_max = math.ceil(line_height + 1)
+                s_max = math.ceil(line_height) + 1
             for s in range(s_min, s_max):
                 self.d1_matrix((ts, s))
                 self.degree_list.append((ts, s))
@@ -334,6 +348,7 @@ class MayE1:
 
 
     def make_smith_complex(self):
+        # Based on code provided to me by my Masters supervisor, Achim Krause. Generalized to work for arbitrary grading groups.
         differential_degree = self.complex.degree_of_differential()
         degree_tuples = self.complex.ordered_degrees()
         degree_list = []
@@ -385,6 +400,10 @@ class MayE1:
         return ChainComplex(data = smith_differentials, base_ring = self.base_ring, grading_group = self.grading_group, degree = (-1, 1)), chain_isomorphism, chain_isomorphism_inverse
 
 
+    def is_cycle(self, polynomial):
+        return self.d1(polynomial) == self.ring("0")
+
+
     def make_homology_projections(self):
         homology_projections = {}
         differential_degree = self.complex.degree_of_differential()
@@ -403,9 +422,10 @@ class MayE1:
     
     def homology_projection(self, degree_pair):
         degree = self.grading_group(degree_pair)
-        differential_degree = self.complex.degree_of_differential()
         try:
             projection = self.homology_projections[degree]
+            if projection.ncols() == 0 or projection.nrows() == 0:
+                projection = matrix(self.base_ring, nrows = 0, ncols = self.complex.free_module_rank(degree))
         except KeyError:
             projection = matrix(self.base_ring, nrows = 0, ncols = self.complex.free_module_rank(degree))
         
@@ -413,11 +433,91 @@ class MayE1:
 
 
     def project_to_homology(self, polynomial):
+        if not self.is_cycle(polynomial):
+            raise ValueError(f"{polynomial} is not a cycle.")
         ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
         result = self.vector_polynomial(self.homology_projection((ts, s)) * self.polynomial_vector(polynomial), (ts, s))
         return result
 
-May = MayE1(3, 0, 10, 5, generator_ts_cap = 150)
+    
+    def compute_homology(self):
+        homology_dict = {}
+        differential_degree = self.grading_group((-1, 1))
+        degrees = [self.grading_group(degree_tuple) for degree_tuple in self.degree_list]
+        degrees = [degree for degree in degrees if ((degree + differential_degree in degrees or self.above_line(tuple(degree + differential_degree))) and degree - differential_degree in degrees) or ((tuple(degree)[0] in [0, self.ts_max]) and (not self.above_line(tuple(degree))))]
+        for degree in degrees:
+            dimension = self.complex.free_module_rank(degree)
+            try:
+                projection_rank = self.homology_projection(degree).rank()
+
+                smith_homology_generators = [vector(self.base_ring, (dimension - i - 1) * [0] + [1] + i * [0]) for i in range(projection_rank)]
+                homology_dict[degree] = [self.vector_polynomial(self.smith_isomorphism_inverse[degree] * smith_generator, tuple(degree)) for smith_generator in smith_homology_generators]
+            except KeyError:
+                homology_dict[degree] = []
+        return homology_dict
+
+
+    def write_data_file(self):
+        filename = f"homology_data_l-{self.localization_amount}_d-{self.distance_to_line}_ts-{self.ts_min}-{self.ts_max}.csv"
+        os.chdir("homology_data")
+        write_data = True
+        if filename in os.listdir():
+            overwrite = input("Data file with current parameters is alreadly present, do you wish to overwrite? [y/n]: ")
+            if overwrite != "y":
+                write_data = False
+            else:
+                os.remove(filename)
+
+        if write_data:
+            gens_to_multiply = []
+            gen_names = ["h_1_0", "h_1_1", "h_2_0"]
+            for i in range(0, 3):
+                if i < self.localization_amount:
+                    gens_to_multiply.append(self.ring(gen_names[i] + "_n"))
+                else:
+                    gens_to_multiply.append(self.ring(gen_names[i]))
+            lines_to_write = []
+            lines_to_write.append(["name", f"ts_degree", f"s_degree", f"{str(self.gens[0])}_target", f"{str(self.gens[1])}_target", f"{str(self.gens[2])}_target"])
+            if self.localization_amount == 0:
+                lines_to_write.append(["0"]*6)
+            else:
+                lines_to_write.append([f"{float(self.positive_slope)}", f"{float(self.negative_slope)}", f"{float(self.line_height(0))}", f"{float(self.distance_to_line)}", f"{self.localization_amount}", ""])
+            homology_classes = []
+            for class_list in self.homology.values():
+                homology_classes += class_list
+            homology_classes.sort(key = lambda x : (self.ts_degree(x), self.s_degree(x), str(x)))
+            for homology_class in homology_classes:
+                class_name = str(homology_class)
+                class_ts_degree = self.ts_degree(homology_class)
+                class_s_degree = self.s_degree(homology_class)
+                if (class_s_degree < self.line_height(class_ts_degree) - self.distance_to_line) or (class_s_degree > self.line_height(class_ts_degree)) or (class_ts_degree > self.ts_max) or (class_ts_degree < self.ts_min):
+                    continue
+                #print((class_s_degree, class_ts_degree))
+                targets = []
+                for gen in gens_to_multiply:
+                    if (class_s_degree + self.s_degree(gen) < self.line_height(class_ts_degree) - self.distance_to_line) or (class_s_degree + self.s_degree(gen) > self.line_height(class_ts_degree)) or (class_ts_degree + self.ts_degree(gen) > self.ts_max) or (class_ts_degree + self.ts_degree(gen) < self.ts_min):
+                        targets.append("")
+                        continue
+                    try:
+                        if self.is_cycle(gen * homology_class) and (self.ts_min <= self.ts_degree(gen * homology_class) and self.ts_max >= self.ts_degree(gen * homology_class)):
+                            targets.append(str(self.project_to_homology(gen * homology_class)))
+                        else:
+                            targets.append("")
+                    except TypeError as e:
+                        print("here")
+                        print(e, homology_class, targets)
+                for i, target in enumerate(targets):
+                    if target == "0":
+                        targets[i] = ""
+                lines_to_write.append([class_name, class_ts_degree, class_s_degree, targets[0], targets[1], targets[2]])
+
+            with open(filename, "w") as f:
+                writer = csv.writer(f)
+                for line in lines_to_write:
+                    writer.writerow(line)
+
+        os.chdir("..")      
+May = MayE1(2, -10, 30, 5, generator_ts_cap = 150)
 
 def run_basic_tests():
     print([f"{variable} : {May.compute_monomial_d1(variable)}" for variable in May.gens])
@@ -454,5 +554,6 @@ def run_other_tests():
 run_d1_tests()
 run_smith_tests()
 run_other_tests()
+May.write_data_file()
 
 
