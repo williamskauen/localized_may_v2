@@ -48,6 +48,10 @@ for i, filename in enumerate(data_files):
 
 file_number = input()
 data_file = data_files[int(file_number) - 1]
+if "E4" in data_file:
+    E4 = True
+else:
+    E4 = False
 
 with open(data_file, "r") as f:
     csvreader = csv.reader(f)
@@ -56,7 +60,7 @@ with open(data_file, "r") as f:
     positive_slope = float(second_line[0])
     negative_slope = float(second_line[1])
     positive_constant_term = float(second_line[2])
-    distance_to_line = int(float(second_line[3]))
+    distance_to_line = round(float(second_line[3]), 2)
     localization_amount = int(second_line[4])
     signs = []
     if localization_amount >= 3:
@@ -91,14 +95,20 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12) -> str:
 
     for homology_class in homology_classes:
         ts_degree = homology_class["ts_degree"]
-        if ts_degree >= ts_start and ts_degree <= ts_start + picture_width - 2:
-            classes_to_draw.append(homology_class)
-
-    lowest_y = math.floor(line_height(ts_start - 1) - distance_to_line + 0.001) + 1 # + 1 since this will be one above corner position
+        s_degree = homology_class["s_degree"]
+        if ts_degree < ts_start or ts_degree > ts_start + picture_width - 2:
+            continue
+        if localization_amount == 0 and s_degree > ts_start + picture_width - 2:
+            continue
+        classes_to_draw.append(homology_class)
+    if localization_amount == 0:
+        lowest_y = 0
+    else:
+        lowest_y = math.floor(line_height(ts_start - 1) - distance_to_line + 0.001) + 1 # + 1 since this will be one above corner position
 
     tikz_code = ["\\begin{tikzpicture}\n"]
 
-    setup_lines = [f"\\draw[black, line width = 0.5mm] (0, 0) -- ({picture_width}, 0);", f"\\draw[black, line width = 0.5mm] (0, 0) -- (0, {picture_height});"]
+    setup_lines = [f"\\draw[black, line width = 0.5mm] (0, 0) -- ({picture_width}, 0);", f"\\draw[black, line width = 0.5mm] (0, 0) -- (0, {picture_height});", f"\\node at ({picture_width / 2}, -1) {{$t - s$}};", f"\\node at (-1, {picture_height / 2}) {{$s$}};"]
 
     for i, j in zip(range(1, picture_width), range(ts_start, ts_start + picture_width - 1)):
         setup_lines.append(f"\\node at ({i}, -0.5) {{{j}}};")
@@ -107,7 +117,7 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12) -> str:
         setup_lines.append(f"\\node at (-0.5, {i}) {{{j}}};")
 
     if localization_amount != 0:
-        line_offset = line_height(ts_start - 1) - math.floor(line_height(ts_start - 1))
+        line_offset = line_height(ts_start - 1) - distance_to_line - lowest_y + 1
         setup_lines.append(f"\\draw[green, thick] (0, {line_offset}) -- ({picture_width}, {positive_slope * picture_width + line_offset});")
         setup_lines.append(f"\\draw[red, thick] (0, {distance_to_line + line_offset}) -- ({picture_width}, {positive_slope * picture_width + distance_to_line + line_offset});")
 
@@ -193,7 +203,10 @@ if mode == "1":
     else:
         ts_start = int(ts_start)
     code, ts_start, picture_width = generate_picture_code(ts_start)
-    filename = f"homology_tikz_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_start + picture_width - 1}.txt"
+    if E4 == True:
+        filename = f"homology_E4_tikz_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_start + picture_width - 1}.txt"
+    else:
+        filename = f"homology_tikz_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_start + picture_width - 1}.txt"
     os.chdir("homology_pictures")
 elif mode == "2":
     ts_start = input("Type desired ts start value (leave blank for default of 1): ")
@@ -207,7 +220,10 @@ elif mode == "2":
     else:
         ts_stop = int(ts_stop)
     code, ts_start, picture_width = generate_table_code(ts_start, ts_stop)
-    filename = f"homology_table_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_stop}.txt"
+    if E4 == True:
+        filename = f"homology_table_E4_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_stop}.txt"
+    else:
+        filename = f"homology_table_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_stop}.txt"
     os.chdir("homology_tables")
 else:
     raise ValueError("Invalid mode")

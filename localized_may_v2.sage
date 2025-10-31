@@ -1,14 +1,16 @@
 import math
+from multiprocessing.sharedctypes import Value
 import os
 import csv
 class MayE1:
 
-    def __init__(self, localizaton_amount : int, ts_min : int, ts_max : int, distance_to_line : int, generator_ts_cap : int = 150) -> None:
+    def __init__(self, localizaton_amount : int, ts_min : int, ts_max : int, distance_to_line : int, generator_ts_cap : int = 150, debug = False) -> None:
         self.localization_amount = localizaton_amount
         self.ts_min = ts_min
         self.ts_max = ts_max
         self.distance_to_line = distance_to_line
-
+        self.debug = debug 
+        
         self.variables = []
         for i in range(1, int(math.log2(generator_ts_cap + 2)) + 1):
             for j in range(0, int(math.log2(generator_ts_cap + 1)) + 1):
@@ -66,9 +68,28 @@ class MayE1:
         self.complex = self.make_chain_complex()
         self.smith_differentials = {}
         self.smith_isomorphism = {}
-        self.smith_complex, self.smith_isomorphism, self.smith_isomorphism_inverse = self.make_smith_complex()
-        self.homology_projections = self.make_homology_projections()
+        self.smith_complex, self.smith_isomorphism, self.smith_isomorphism_inverse = self.make_smith_complex(self.complex)
+        self.homology_projections = self.make_homology_projections(self.complex, self.smith_isomorphism, self.smith_isomorphism_inverse)
         self.homology = self.compute_homology()
+
+        if self.localization_amount == 2:
+            self.double_localized_E2_lines =  {0 : (("h_1_0_n * h_1_1_n * h_2_0", "0"),),
+                        1 : (("h_1_0_n * h_1_1_n^2 * h_2_0", "0"),),
+                        2 : (("h_1_0_n^2 * h_1_1_n * h_2_0", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0", "0")),
+                        3 : (("h_1_0_n * h_1_1_n^4 * h_2_0", "0"), ("h_1_0_n * h_1_1_n * h_2_1", "0")),
+                        4 : (("h_1_0_n * h_1_1_n^5 * h_2_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0", "0"), ("h_1_0_n * h_1_1_n^2 * h_2_0^2 * h_2_1 + h_1_0_n * h_1_1_n * h_2_0 * h_3_0", "0"), ("h_1_0_n * h_1_1_n * h_1_2 * h_2_1", "0")),
+                        5 : (("h_1_0_n * h_1_1_n^6 * h_2_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0^2 * h_2_1 + h_1_0_n * h_1_1_n^2 * h_2_0 * h_3_0", "0"), ("h_1_0_n * h_1_1_n * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n * h_1_2^2 * h_2_1", "0")),
+                        6 : (("h_1_0_n * h_1_1_n^2 * h_2_0 * h_1_3", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^2", "0"), ("h_1_0_n * h_1_1_n^7 * h_2_0", "0"), ("h_1_0_n^2 * h_1_1_n^4 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^3 * h_2_0 * h_3_0", "0"), ("h_1_0_n^4 * h_1_1_n * h_2_0", "0"), ("h_1_0_n^2*h_1_1_n*h_2_0*h_1_2^4", "0")),
+                        7 : (("h_1_0_n * h_1_1_n^2 * h_2_0 * h_2_1^2", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n^8 * h_2_0", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_3", "0"), ("h_1_0_n^2 * h_1_1_n^5 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^4 * h_2_0 * h_3_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_1", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^3", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_2^5", "0")),
+                        8 : (("h_1_0_n * h_1_1_n * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n * h_2_0 * h_1_3"), ("h_1_0_n * h_1_1_n^4 * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n^9 * h_2_0", "0"), ("h_1_0_n^5 * h_1_1_n * h_2_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_1_2 * h_2_1", "0"), ("h_1_0_n^2 * h_1_1_n^6 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^5 * h_2_0 * h_3_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^4", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_2^6", "0"))
+                        }
+
+            self.implemented_differentials = {3 : self.d_3}
+            self.computed_projections = {2 : self.homology_projections}
+
+            self.E4 = self.compute_double_localized_E2n(2, self.homology, self.double_localized_E2_lines)
+
+            self.pages = {2 : self.homology, 4 : self.E4}
         
     
     def ts_degree(self, polynomial) -> int:
@@ -110,11 +131,19 @@ class MayE1:
         return self.tuple_monomial(tuple([monomial.degree(variable) if variable != variable_to_remove else 0 for variable in self.gens]))
     
 
+    def positive_line_height(self, ts_degree):
+        return self.positive_slope * ts_degree + self.positive_constant_term
+
+
+    def negative_line_height(self, ts_degree):
+        return self.negative_slope * ts_degree + self.negative_constant_term
+
+
     def line_height(self, ts_degree):
         if ts_degree >= self.base_negative_ts:
-            result = self.positive_slope * ts_degree + self.negative_constant_term
+            result = self.positive_line_height(ts_degree)
         else:
-            result = self.negative_slope * ts_degree + self.negative_constant_term
+            result = self.negative_line_height(ts_degree)
         return result
 
 
@@ -126,15 +155,18 @@ class MayE1:
             return s - self.line_height(ts) > 0.000001
 
 
-    def polynomial_vector(self, polynomial):
-        # Returns a vector representation of a homogeneous polynomial in the monomial basis.
+    def polynomial_vector(self, polynomial, basis = None):
+        # Returns a vector representation of a homogeneous polynomial in the provided monomial basis.
         ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
-        return vector(Integers(2), [1 if monomial in polynomial.monomials() else 0 for monomial in self.monomials_in_degree((ts, s))])
+        if basis == None:
+            basis = self.monomials_in_degree((ts, s))
+        return vector(Integers(2), [1 if monomial in polynomial.monomials() else 0 for monomial in basis])
 
 
-    def vector_polynomial(self, vector_representation, degree_pair):
+    def vector_polynomial(self, vector_representation, degree_pair, basis = None):
         # Given a vector representation along with a bidegree, returns the polynomial represented by the vector.
-        basis = self.monomials_in_degree(degree_pair)
+        if basis == None:
+            basis = self.monomials_in_degree(degree_pair)
         result = self.ring("0")
         for i, coefficient in enumerate(tuple(vector_representation)):
             result += coefficient * basis[i]
@@ -197,7 +229,7 @@ class MayE1:
             base_representation = self.monomial_tuple(base_factor)
             for summand in self.noncorrect_variable_d1(variable).monomials():
                 summand_representation = self.monomial_tuple(summand)
-                summand_representation = [-variable_exponent if i < self.localization_amount else variable_exponent for i, variable_exponent in enumerate(summand_representation)] # Negative sign due to the localized variables alreadly being persumed to have negative exponent.
+                summand_representation = [-variable_exponent if i < self.localization_amount else variable_exponent for i, variable_exponent in enumerate(summand_representation)] # Negative sign due to the localized variables alreadly being presumed to have negative exponent.
                 survives = True
                 for i in range(self.localization_amount): # Checks if the product of base_factor and summand will project to 0, if so it is discarded:
                     if base_representation[i] + summand_representation[i] <= 0:
@@ -222,7 +254,7 @@ class MayE1:
 
     def compute_minneg_monomials_in_degree(self, degree_pair : tuple[int, int]) -> list:
         ts, s = degree_pair
-        new_ts, new_s = ts - self.base_negative_ts, s + self.localization_amount # Negative sing due to double negative
+        new_ts, new_s = ts - self.base_negative_ts, s + self.localization_amount # Negative sign due to double negative
 
         try:
             ts_weighted_integer_vectors = self.weighted_integer_vectors[new_ts]
@@ -310,13 +342,15 @@ class MayE1:
             line_height = self.line_height(ts)
             if self.localization_amount == 0:
                 s_min = 0
-                s_max = 2 * self.ts_max - ts + 2
+                s_max = self.ts_max + 1
             else: 
-                s_min = math.floor(line_height) - self.distance_to_line - 1
+                s_min = math.floor(round(line_height - self.distance_to_line - 1 - self.positive_slope, 2))
                 s_max = math.ceil(line_height) + 1
             for s in range(s_min, s_max):
                 self.d1_matrix((ts, s))
                 self.degree_list.append((ts, s))
+                if self.debug:
+                    print(f"monomials and matrix {(ts, s)}")
         # Clean and pad the dictionary to make the ChainComplex constructor happy
         degrees = list(self.d1_matrices.keys())
         for degree in degrees:
@@ -331,7 +365,7 @@ class MayE1:
                 self.d1_matrices[degree + differential_degree] = matrix(self.base_ring, nrows = 0, ncols = mat.nrows())
             if degree - differential_degree not in degrees and int(mat.ncols()) != int(0):
                 self.d1_matrices[degree - differential_degree] = matrix(self.base_ring, nrows = mat.ncols(), ncols = 0)
-        self.test_matrices()
+        #self.test_matrices()
         return ChainComplex(data = self.d1_matrices, base_ring = self.base_ring, grading_group = self.grading_group, degree_of_differential = self.grading_group((-1, 1)))
 
 
@@ -347,10 +381,10 @@ class MayE1:
                 print(key, rows, cols)
 
 
-    def make_smith_complex(self):
+    def make_smith_complex(self, chain_complex):
         # Based on code provided to me by my Masters supervisor, Achim Krause. Generalized to work for arbitrary grading groups.
         differential_degree = self.complex.degree_of_differential()
-        degree_tuples = self.complex.ordered_degrees()
+        degree_tuples = chain_complex.ordered_degrees()
         degree_list = []
         smith_differentials = {}
         chain_isomorphism = {}
@@ -358,18 +392,19 @@ class MayE1:
         for degree_tuple in degree_tuples:
             degree_list += list(reversed(degree_tuple))
         for degree in degree_list:
-            dimension = self.complex.free_module_rank(degree)
-            dimension_below = self.complex.free_module_rank(degree - differential_degree)
-            print(degree, dimension, dimension_below)
-            d_in = self.complex.differential(degree - differential_degree)
-            d_out_rank = self.complex.differential(degree).rank()
+            dimension = chain_complex.free_module_rank(degree)
+            dimension_below = chain_complex.free_module_rank(degree - differential_degree)
+            if self.debug:
+                print(f"smith complex {degree, dimension, dimension_below}")
+            d_in = chain_complex.differential(degree - differential_degree)
+            d_out_rank = chain_complex.differential(degree).rank()
             D_1, T_1, S_1_inv = d_in.smith_form()
             T_1_inv, S_1 = T_1.inverse(), S_1_inv.inverse()
             if dimension == 0 and dimension_below == 0:
                 continue
             if degree + differential_degree not in degree_list:
                 smith_differentials[degree - differential_degree] = D_1
-                chain_isomorphism[degree] = T_1_inv.inverse()
+                chain_isomorphism[degree] = T_1
                 chain_isomorphism[degree - differential_degree] = S_1
                 continue
 
@@ -378,14 +413,19 @@ class MayE1:
             new_d_in = f * T_1_inv * D_1
             #assert T_1_inv * D_1 * S_1 == d_in, ("error0", locals())
             #assert f * d_in == new_d_in * S_1, ("error1", locals())
-            new_d_in_sub = new_d_in.submatrix(d_out_rank, 0)
+            if new_d_in.nrows() == 0:
+                new_d_in_sub = matrix(self.base_ring, nrows = 0, ncols = new_d_in.ncols())
+            elif new_d_in.ncols() == 0:
+                new_d_in_sub = matrix(self.base_ring, nrows = new_d_in.nrows() - d_out_rank, ncols = 0)
+            else:
+                new_d_in_sub = new_d_in.submatrix(d_out_rank, 0) # This throws a SEGFAULT if either of the dimensions are 0 (only when working with Z/2-matrices)
             new_d_in_sub, T_2, S_2_inv = new_d_in_sub.smith_form()
             S_2 = S_2_inv.inverse()
             new_d_in = block_matrix([[zero_matrix(self.base_ring, nrows = d_out_rank, ncols = dimension_below)], [new_d_in_sub]])
             Id = identity_matrix(self.base_ring, d_out_rank)
             transform = block_matrix([[Id, 0], [0, T_2]])
             new_f = transform * f
-            #new_f = matrix(self.base_ring, [transform * column for column in f.columns()]).transpose() The multiplication above used to cause a SEGFAULT, which i suspect to be due to some weird behavior with 0x0 matrices.
+            #new_f = matrix(self.base_ring, [transform * column for column in f.columns()]).transpose() # The multiplication above used to cause a SEGFAULT, which i suspect to be due to some weird behavior with 0x0 matrices.
             f_next = S_2 * S_1
             #assert new_f * d_in == new_d_in * f_next, ("error2", locals())
             #f_next = matrix(self.base_ring, [S_2 * column for column in S_1.columns()]).transpose() # Same as above
@@ -393,10 +433,10 @@ class MayE1:
             smith_differentials[degree - differential_degree] = new_d_in
             chain_isomorphism[degree] = new_f
             chain_isomorphism[degree - differential_degree] = f_next
-        
         for degree in degree_list:
             chain_isomorphism_inverse[degree] = chain_isomorphism[degree].inverse()
-        print(degree_list)
+        if self.debug:
+            print(degree_list)
         return ChainComplex(data = smith_differentials, base_ring = self.base_ring, grading_group = self.grading_group, degree = (-1, 1)), chain_isomorphism, chain_isomorphism_inverse
 
 
@@ -404,18 +444,18 @@ class MayE1:
         return self.d1(polynomial) == self.ring("0")
 
 
-    def make_homology_projections(self):
+    def make_homology_projections(self, chain_complex, smith_isomorphism, smith_isomorphism_inverse):
         homology_projections = {}
-        differential_degree = self.complex.degree_of_differential()
-        nonzero_degrees = self.complex.nonzero_degrees()
-        for degree in self.smith_isomorphism.keys():
-            dimension = self.complex.free_module_rank(degree)
+        differential_degree = chain_complex.degree_of_differential()
+        nonzero_degrees = chain_complex.nonzero_degrees()
+        for degree in smith_isomorphism.keys():
+            dimension = chain_complex.free_module_rank(degree)
             if degree - differential_degree in nonzero_degrees: 
-                d_in_rank = self.complex.differential(degree - differential_degree).rank()
+                d_in_rank = chain_complex.differential(degree - differential_degree).rank()
             else:
                 d_in_rank = 0
-            d_out_rank = self.complex.differential(degree).rank()
-            homology_projections[degree] = self.smith_isomorphism_inverse[degree] * block_matrix([[zero_matrix(self.base_ring, nrows = d_in_rank + d_out_rank, ncols = d_in_rank + d_out_rank), 0], [0, identity_matrix(self.base_ring, dimension - d_in_rank - d_out_rank)]]) *  self.smith_isomorphism[degree]
+            d_out_rank = chain_complex.differential(degree).rank()
+            homology_projections[degree] = smith_isomorphism_inverse[degree] * block_matrix([[zero_matrix(self.base_ring, nrows = d_in_rank + d_out_rank, ncols = d_in_rank + d_out_rank), 0], [0, identity_matrix(self.base_ring, dimension - d_in_rank - d_out_rank)]]) *  smith_isomorphism[degree]
         
         return homology_projections
     
@@ -447,18 +487,42 @@ class MayE1:
         degrees = [degree for degree in degrees if ((degree + differential_degree in degrees or self.above_line(tuple(degree + differential_degree))) and degree - differential_degree in degrees) or ((tuple(degree)[0] in [0, self.ts_max]) and (not self.above_line(tuple(degree))))]
         for degree in degrees:
             dimension = self.complex.free_module_rank(degree)
-            try:
-                projection_rank = self.homology_projection(degree).rank()
-
-                smith_homology_generators = [vector(self.base_ring, (dimension - i - 1) * [0] + [1] + i * [0]) for i in range(projection_rank)]
-                homology_dict[degree] = [self.vector_polynomial(self.smith_isomorphism_inverse[degree] * smith_generator, tuple(degree)) for smith_generator in smith_homology_generators]
-            except KeyError:
-                homology_dict[degree] = []
+            projection_rank = self.homology_projection(degree).rank()
+            smith_homology_generators = [vector(self.base_ring, (dimension - i - 1) * [0] + [1] + i * [0]) for i in range(projection_rank)]
+            homology_dict[degree] = sorted([self.vector_polynomial(self.smith_isomorphism_inverse[degree] * smith_generator, tuple(degree)) for smith_generator in smith_homology_generators])
         return homology_dict
 
 
-    def write_data_file(self):
-        filename = f"homology_data_l-{self.localization_amount}_d-{self.distance_to_line}_ts-{self.ts_min}-{self.ts_max}.csv"
+    def what_hit(self, polynomial):
+        ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
+        degree = self.grading_group((ts, s))
+        differential_degree = self.complex.degree_of_differential()
+        try:
+            solution_vector = self.d1_matrix(tuple(degree - differential_degree)).solve_right(self.polynomial_vector(polynomial))
+        except ValueError:
+            print(f"{polynomial} is not hit, or some other error occurred")
+            return None
+        return self.vector_polynomial(solution_vector, tuple(degree - differential_degree))
+
+
+    def write_data_file(self, page_number = 2):
+        if page_number == 2:
+            homology_classes = []
+            for class_list in self.homology.values():
+                homology_classes += class_list
+        else:
+            if self.localization_amount != 2:
+                raise ValueError("This is only implemented for localization amount 2")
+            homology_classes = []
+            for class_list in self.pages[page_number].values():
+                homology_classes += class_list
+        homology_classes = [self.project_to_homology(homology_class) for homology_class in homology_classes]
+        homology_classes.sort(key = lambda x : (self.ts_degree(x), self.s_degree(x), str(x)))
+        if page_number == 2:
+            distance_to_line = self.distance_to_line
+        else:
+            distance_to_line = round(max([self.line_height(self.ts_degree(polynomial)) - self.s_degree(polynomial) for polynomial in homology_classes]), 2)
+        filename = f"homology_data_l-{self.localization_amount}_p-{page_number}_d-{distance_to_line}_ts-{self.ts_min}-{self.ts_max}.csv"
         os.chdir("homology_data")
         write_data = True
         if filename in os.listdir():
@@ -481,43 +545,164 @@ class MayE1:
             if self.localization_amount == 0:
                 lines_to_write.append(["0"]*6)
             else:
-                lines_to_write.append([f"{float(self.positive_slope)}", f"{float(self.negative_slope)}", f"{float(self.line_height(0))}", f"{float(self.distance_to_line)}", f"{self.localization_amount}", ""])
-            homology_classes = []
-            for class_list in self.homology.values():
-                homology_classes += class_list
-            homology_classes.sort(key = lambda x : (self.ts_degree(x), self.s_degree(x), str(x)))
+                lines_to_write.append([f"{float(self.positive_slope)}", f"{float(self.negative_slope)}", f"{float(self.line_height(0))}", f"{float(distance_to_line)}", f"{self.localization_amount}", f"{page_number}"])
             for homology_class in homology_classes:
                 class_name = str(homology_class)
                 class_ts_degree = self.ts_degree(homology_class)
                 class_s_degree = self.s_degree(homology_class)
-                if (class_s_degree < self.line_height(class_ts_degree) - self.distance_to_line) or (class_s_degree > self.line_height(class_ts_degree)) or (class_ts_degree > self.ts_max) or (class_ts_degree < self.ts_min):
+                if ((class_s_degree < self.line_height(class_ts_degree) - self.distance_to_line) or (class_s_degree > self.line_height(class_ts_degree)) or (class_ts_degree > self.ts_max) or (class_ts_degree < self.ts_min)) and self.localization_amount != 0:
                     continue
                 #print((class_s_degree, class_ts_degree))
                 targets = []
                 for gen in gens_to_multiply:
-                    if (class_s_degree + self.s_degree(gen) < self.line_height(class_ts_degree) - self.distance_to_line) or (class_s_degree + self.s_degree(gen) > self.line_height(class_ts_degree)) or (class_ts_degree + self.ts_degree(gen) > self.ts_max) or (class_ts_degree + self.ts_degree(gen) < self.ts_min):
+                    distance_from_line = round(self.line_height(self.ts_degree(gen * homology_class)) - self.s_degree(gen * homology_class), 2)
+                    if (distance_from_line <= 0 or distance_from_line >= distance_to_line) and self.localization_amount != 0:
+                        targets.append("")
+                        continue
+                    if not self.is_cycle(gen * homology_class) or self.ts_min > self.ts_degree(gen * homology_class) or self.ts_max <= self.ts_degree(gen * homology_class):
                         targets.append("")
                         continue
                     try:
-                        if self.is_cycle(gen * homology_class) and (self.ts_min <= self.ts_degree(gen * homology_class) and self.ts_max >= self.ts_degree(gen * homology_class)):
-                            targets.append(str(self.project_to_homology(gen * homology_class)))
+                        if self.project_to_later_page(gen * homology_class, page_number) in homology_classes: # This is valid since none of the homology representatives change under projection.
+                            targets.append(str(self.project_to_later_page(gen * homology_class, page_number)))
                         else:
                             targets.append("")
                     except TypeError as e:
                         print("here")
-                        print(e, homology_class, targets)
+                        print(homology_class, targets)
+                        raise e
                 for i, target in enumerate(targets):
                     if target == "0":
                         targets[i] = ""
                 lines_to_write.append([class_name, class_ts_degree, class_s_degree, targets[0], targets[1], targets[2]])
+
 
             with open(filename, "w") as f:
                 writer = csv.writer(f)
                 for line in lines_to_write:
                     writer.writerow(line)
 
-        os.chdir("..")      
-May = MayE1(2, -10, 30, 5, generator_ts_cap = 150)
+        os.chdir("..")
+
+
+    def d_3(self, polynomial, E2_lines):
+        if self.localization_amount != 2:
+            raise ValueError("This is only implemented for localization amount 2")
+        polynomial = self.project_to_homology(polynomial)
+        result = self.ring("0")
+        ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
+        line_number = int((self.positive_line_height(ts) - s) * 2) # We have to use positive line height for it to work correctly with the h_2_0-multiplication lines
+        line = [[self.project_to_homology(self.ring(x[0])), self.project_to_homology(self.ring(x[1]))] for x in E2_lines[line_number]]
+        found = False
+        for element, differential in line:
+            exponent = int((ts - self.ts_degree(element)) / 2)
+            if exponent % 2 == 1 or exponent < 0:
+                continue
+            if self.project_to_homology(element * self.ring(f"h_2_0^{exponent}")) == polynomial:
+                found = True
+                result = differential * self.ring(f"h_2_0^{exponent}")
+                if exponent % 4 == 2:
+                    for monomial in element.monomials():
+                        monomial_list = list(self.monomial_tuple(monomial))
+                        summand1 = monomial_list.copy()
+                        summand2 = monomial_list.copy()
+                        
+                        # The below corresponds to the May d3-differential of h_2_0^2 being h_1_1^3 + h_1_0 * h_1_2
+                        summand1[1] -= 3
+                        summand1[2] += exponent - 2
+                        if summand1[1] > 0:
+                            result += self.tuple_monomial(tuple(summand1))
+                        
+                        summand2[0] -= 2
+                        summand2[2] += exponent - 2
+                        summand2[3] += 1 # This is + while the above is - due to the (slightly clunky) way we handle the negative exponents
+                        if summand2[0] > 0:
+                            result += self.tuple_monomial(tuple(summand2))
+                break
+            
+        if found == False:
+            raise ValueError(f"Did not find a match for {polynomial} in line {line_number}.")
+        try:
+            result = self.project_to_homology(result)
+        except ValueError:
+            print(f"d_3-error \npolynomial = {polynomial} \nresult = {result} \nmonomial_list = {monomial_list} \nsummand1 = {summand1} \nsummand2 = {summand2} \nline_number = {line_number} \nelement = {element} \ndifferential = {differential}")
+        return result
+                    
+
+    def compute_double_localized_E2n(self, n : int, previous_homology : dict, previous_lines : dict):
+        differential_degree = self.complex.degree_of_differential()
+        differential = self.implemented_differentials[2*n - 1]
+        E2n_dict = {}
+        max_line_distance = (len(previous_lines.keys()) - 1) / 2
+        if self.localization_amount != 2:
+            raise ValueError("This is only implemented for localization amount 2")
+        if self.distance_to_line < max_line_distance:
+            raise ValueError("May class has too small computation range")
+        previous_page = {}
+        for degree_pair in previous_homology.keys():
+            if self.positive_line_height(degree_pair[0]) - degree_pair[1] - max_line_distance < 0.0001: # positive_line_height for same reason as in d_3
+                previous_page[degree_pair] = previous_homology[degree_pair]
+        
+        matrix_dict = {}
+        for degree_pair in previous_page.keys():
+            matrix_columns = []
+            for homology_class in previous_page[degree_pair]:
+                differential_monomials = differential(homology_class, previous_lines).monomials()
+                if degree_pair + differential_degree in previous_page.keys():
+                    matrix_columns.append([1 if monomial in differential_monomials else 0 for monomial in previous_page[degree_pair + differential_degree]])
+                else:
+                    break
+            if len(matrix_columns) == 0:
+                matrix_dict[degree_pair] = matrix(self.base_ring, nrows = 0, ncols = len(previous_homology[degree_pair]))
+            else:
+                matrix_dict[degree_pair] = matrix(self.base_ring, matrix_columns).transpose()
+            
+            if degree_pair - differential_degree not in previous_page.keys():
+                matrix_dict[degree_pair - differential_degree] = matrix(self.base_ring, nrows = len(previous_page[degree_pair]), ncols = 0)
+
+        for degree_pair in list(matrix_dict.keys()):
+            if degree_pair - differential_degree not in matrix_dict.keys() and matrix_dict[degree_pair].ncols() != 0 and self.debug:
+                print(degree_pair, matrix_dict[degree_pair].ncols())
+            if matrix_dict[degree_pair].nrows() == 0 and matrix_dict[degree_pair].ncols() == 0:
+                del matrix_dict[degree_pair]
+
+        previous_page_complex = ChainComplex(data = matrix_dict, base_ring = self.base_ring, grading_group = self.grading_group, degree_of_differential = differential_degree)
+        smith_complex, smith_isomorphism, smith_isomorphism_inverse = self.make_smith_complex(previous_page_complex)
+        E2n_projections = self.make_homology_projections(previous_page_complex, smith_isomorphism, smith_isomorphism_inverse)
+        self.computed_projections[2*n] = E2n_projections
+
+        degree_pairs = [self.grading_group(degree_pair) for degree_pair in self.degree_list if self.positive_line_height(degree_pair[0]) - degree_pair[1] - max_line_distance < 0.0001]
+        E2n_dict = {}
+        for degree_pair in degree_pairs:
+            if degree_pair in smith_isomorphism.keys():
+                dimension = previous_page_complex.free_module_rank(degree_pair)
+                projection_rank = E2n_projections[degree_pair].rank()
+                smith_homology_generators = [vector(self.base_ring, (dimension - i - 1) * [0] + [1] + i * [0]) for i in range(projection_rank)]
+                E2n_dict[degree_pair] = sorted([self.vector_polynomial(smith_isomorphism_inverse[degree_pair] * smith_generator, tuple(degree_pair), basis = previous_page[degree_pair]) for smith_generator in smith_homology_generators])
+            else:
+                E2n_dict[degree_pair] = []
+        return E2n_dict
+        
+
+    def project_to_later_page(self, polynomial, page_number):
+        ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
+        degree = self.grading_group((ts, s))
+        if page_number == 2:
+            result = self.project_to_homology(polynomial)
+        else:
+            if degree in self.pages[page_number].keys():
+                basis = self.pages[page_number - 2][degree]
+            else:
+                basis = []
+            if self.localization_amount != 2:
+                raise ValueError("This is only implemented for localization amount 2")
+            if degree in self.computed_projections[page_number].keys():
+                result = self.vector_polynomial(self.computed_projections[page_number][degree] * self.polynomial_vector(self.project_to_later_page(polynomial, page_number - 2), basis), (ts, s), basis)
+            else:
+                result = self.ring("0")
+        return result
+
+May = MayE1(0, 0, 15, 0, generator_ts_cap = 100, debug = True)
 
 def run_basic_tests():
     print([f"{variable} : {May.compute_monomial_d1(variable)}" for variable in May.gens])
@@ -527,25 +712,44 @@ def run_basic_tests():
 
 
 def run_d1_tests():
-    
     works = True
     for degree_pair in May.degree_list:
-        print(f"d1 test {degree_pair}")
+        print(f"d1-test {degree_pair}")
         for monomial in May.monomials_in_degree(degree_pair):
             if May.d1(monomial) != May.matrix_d1(monomial):
                 works = False
-                print(monomial)
+                print(f"{monomial} failed matrix d1 test")
     print(f"d1 matrix works: {works}")
 
 def run_smith_tests():
     works = True
     differential_degree = May.grading_group((-1, 1))
     for degree in May.smith_isomorphism.keys():
-        print(f"Smith test {degree}")
+        print(f"smith-test {degree}")
         if degree - differential_degree in May.smith_isomorphism.keys():
             if May.smith_isomorphism[degree] * May.complex.differential(degree - differential_degree) != May.smith_complex.differential(degree - differential_degree) * May.smith_isomorphism[degree - differential_degree]:
+                print(f"{degree} failed smith test")
                 works = False
     print(f"Smith complex works : {works}")
+
+def run_homology_projection_test():
+    works = True
+    homology_classes = []
+    for homology_list in May.homology.values():
+        homology_classes += homology_list
+    for homology_class in homology_classes:
+        if May.project_to_homology(homology_class) != homology_class:
+            print(f"Homology class {homology_class} changes under projection")
+            works = False
+    print(f"Homology invariant under projection : {works}")
+
+def run_E2_line_tests():
+    for line in May.double_localized_E2_lines.keys():
+        for pair in May.double_localized_E2_lines[line]:
+            polynomial = May.ring(pair[0])
+            line_distance = round(May.positive_line_height(May.ts_degree(polynomial)) - May.s_degree(polynomial), 3)
+            if abs(line_distance - round(line/2, 3)) > 0.00001:
+                print(line, pair, line_distance)
 
 def run_other_tests():
     print(May.complex) 
@@ -554,6 +758,13 @@ def run_other_tests():
 run_d1_tests()
 run_smith_tests()
 run_other_tests()
+run_homology_projection_test()
+if May.localization_amount == 2:
+    run_E2_line_tests()
+
+
 May.write_data_file()
+if May.localization_amount == 2:
+    May.write_data_file(page_number = 4)
 
 
