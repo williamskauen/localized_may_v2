@@ -1,9 +1,8 @@
 import math
-from multiprocessing.sharedctypes import Value
 import os
 import csv
 class MayE1:
-
+    
     def __init__(self, localizaton_amount : int, ts_min : int, ts_max : int, distance_to_line : int, generator_ts_cap : int = 150, debug = False) -> None:
         self.localization_amount = localizaton_amount
         self.ts_min = ts_min
@@ -81,7 +80,8 @@ class MayE1:
                         5 : (("h_1_0_n * h_1_1_n^6 * h_2_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0^2 * h_2_1 + h_1_0_n * h_1_1_n^2 * h_2_0 * h_3_0", "0"), ("h_1_0_n * h_1_1_n * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n * h_1_2^2 * h_2_1", "0")),
                         6 : (("h_1_0_n * h_1_1_n^2 * h_2_0 * h_1_3", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^2", "0"), ("h_1_0_n * h_1_1_n^7 * h_2_0", "0"), ("h_1_0_n^2 * h_1_1_n^4 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^3 * h_2_0 * h_3_0", "0"), ("h_1_0_n^4 * h_1_1_n * h_2_0", "0"), ("h_1_0_n^2*h_1_1_n*h_2_0*h_1_2^4", "0")),
                         7 : (("h_1_0_n * h_1_1_n^2 * h_2_0 * h_2_1^2", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n^8 * h_2_0", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_3", "0"), ("h_1_0_n^2 * h_1_1_n^5 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^4 * h_2_0 * h_3_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_1", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^3", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_2^5", "0")),
-                        8 : (("h_1_0_n * h_1_1_n * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n * h_2_0 * h_1_3"), ("h_1_0_n * h_1_1_n^4 * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n^9 * h_2_0", "0"), ("h_1_0_n^5 * h_1_1_n * h_2_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_1_2 * h_2_1", "0"), ("h_1_0_n^2 * h_1_1_n^6 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^5 * h_2_0 * h_3_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^4", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_2^6", "0"))
+                        8 : (("h_1_0_n * h_1_1_n * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n * h_2_0 * h_1_3"), ("h_1_0_n * h_1_1_n^4 * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n^9 * h_2_0", "0"), ("h_1_0_n^5 * h_1_1_n * h_2_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_1_2 * h_2_1", "0"), ("h_1_0_n^2 * h_1_1_n^6 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^5 * h_2_0 * h_3_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^4", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_2^6", "0")),
+                        9 : (("h_1_0_n * h_1_1_n^10 * h_2_0", "0"), ("h_1_0_n * h_1_1_n^2 * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n^2 * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^5 * h_2_0 * h_1_3", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n^4 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n^2 * h_2_0 * h_1_3"), ("h_1_0_n^5 * h_1_1_n * h_2_0 * h_1_2", "0"), ("h_1_0_n^2 * h_1_1_n^7 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^6 * h_2_0 * h_3_0", "0"), ("h_1_0_n^4 * h_1_1_n * h_2_0 * h_1_2^3", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^5", "0"), ("h_1_0_n * h_1_1_n * h_1_2^6 * h_2_1", "0"))
                         }
 
             self.implemented_differentials = {3 : self.d_3}
@@ -505,6 +505,26 @@ class MayE1:
         return self.vector_polynomial(solution_vector, tuple(degree - differential_degree))
 
 
+    def homology_in_degree(self, degree_pair : tuple) -> list:
+        return self.homology[self.grading_group(degree_pair)]
+
+    
+    def can_factor_homology(self, polynomial, factor = "h_2_0^2"):
+        if factor != None:
+            factor = self.ring(factor)
+        ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
+        factor_ts, factor_s = self.ts_degree(factor), self.s_degree(factor)
+        homology_basis = self.homology_in_degree((ts - factor_ts, s - factor_s))
+        available_vectors = [self.polynomial_vector(homology_class * factor) for homology_class in homology_basis]
+        try:
+            solution_vector = matrix(self.base_ring, available_vectors).transpose().solve_right(self.polynomial_vector(polynomial))
+            solution = self.project_to_homology(self.vector_polynomial(solution_vector, (ts - factor_ts, s - factor_s), homology_basis))
+        except ValueError:
+            print(f"cannot factor out {factor} from {polynomial}, or some other error ocurred")
+            return None
+        return solution
+
+
     def write_data_file(self, page_number = 2):
         if page_number == 2:
             homology_classes = []
@@ -624,8 +644,9 @@ class MayE1:
             raise ValueError(f"Did not find a match for {polynomial} in line {line_number}.")
         try:
             result = self.project_to_homology(result)
-        except ValueError:
+        except ValueError as e:
             print(f"d_3-error \npolynomial = {polynomial} \nresult = {result} \nmonomial_list = {monomial_list} \nsummand1 = {summand1} \nsummand2 = {summand2} \nline_number = {line_number} \nelement = {element} \ndifferential = {differential}")
+            raise e
         return result
                     
 
@@ -702,7 +723,25 @@ class MayE1:
                 result = self.ring("0")
         return result
 
-May = MayE1(0, 0, 15, 0, generator_ts_cap = 100, debug = True)
+input_values = input("Do you want to input parameters for the calculation? If not, the defaults in the code will be uses [y/n]: ")
+if input_values != "y":
+    May = MayE1(2, -10, 30, 5, generator_ts_cap = 150, debug = True)
+else:
+    localization_amount = int(input("Input desired localization amount (number of the h(k)-s to invert): "))
+    ts_min = int(input("Input desired t - s start value: "))
+    ts_max = int(input("Input desired t - s stop value: "))
+    distance_to_line = float(input("Input desired max distance to the vanishing line: "))
+    generator_cap = input("Input desired max t - s degree of the generators which should be considered in the computation (leave blank for the default of 150): ")
+    debug_mode = input("Type debug if you want to enable debug mode (prints additional information and runs the various tests), leave blank if not: ")
+    if generator_cap == "":
+        generator_cap = 150
+    else:
+        generator_cap = int(generator_cap)
+    if debug_mode == "debug":
+        debug_mode == True
+    else:
+        debug_mode == False
+    May = MayE1(localization_amount, ts_min, ts_max, distance_to_line, generator_cap, debug_mode)
 
 def run_basic_tests():
     print([f"{variable} : {May.compute_monomial_d1(variable)}" for variable in May.gens])
@@ -754,13 +793,14 @@ def run_E2_line_tests():
 def run_other_tests():
     print(May.complex) 
 
-#run_basic_tests()
-run_d1_tests()
-run_smith_tests()
-run_other_tests()
-run_homology_projection_test()
-if May.localization_amount == 2:
-    run_E2_line_tests()
+if May.debug:
+    #run_basic_tests()
+    run_d1_tests()
+    run_smith_tests()
+    run_other_tests()
+    run_homology_projection_test()
+    if May.localization_amount == 2:
+        run_E2_line_tests()
 
 
 May.write_data_file()

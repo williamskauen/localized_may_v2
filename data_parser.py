@@ -86,7 +86,7 @@ with open(data_file, "r") as f:
 
 os.chdir("..")
 
-def generate_picture_code(ts_start : int = 1, picture_width : int = 12) -> str:
+def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_distance : int = None) -> str:
     if localization_amount == 0:
         picture_height = picture_width
     else:
@@ -99,6 +99,8 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12) -> str:
         if ts_degree < ts_start or ts_degree > ts_start + picture_width - 2:
             continue
         if localization_amount == 0 and s_degree > ts_start + picture_width - 2:
+            continue
+        if max_distance != None and line_height(ts_degree) - s_degree > max_distance + 0.00001:
             continue
         classes_to_draw.append(homology_class)
     if localization_amount == 0:
@@ -165,11 +167,14 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12) -> str:
     return tikz_code, ts_start, picture_width
 
 
-def generate_table_code(ts_start = 1, ts_stop = 5):
+def generate_table_code(ts_start : int = 1, ts_stop : int = 5, max_distance : int = None):
     classes_to_add = []
 
     for homology_class in homology_classes:
         ts_degree = homology_class["ts_degree"]
+        s_degree = homology_class["s_degree"]
+        if max_distance != None and line_height(ts_degree) - s_degree > max_distance + 0.00001:
+            continue
         if ts_degree >= ts_start and ts_degree <= ts_stop:
             classes_to_add.append(homology_class)
     
@@ -202,7 +207,12 @@ if mode == "1":
         ts_start = 1
     else:
         ts_start = int(ts_start)
-    code, ts_start, picture_width = generate_picture_code(ts_start)
+    max_distance_to_line = input("Type desired max distance from line to plot (leave blank to include everything): ")
+    if max_distance_to_line == "":
+        max_distance_to_line = None
+    else:
+        max_distance_to_line = int(max_distance_to_line)
+    code, ts_start, picture_width = generate_picture_code(ts_start, max_distance = max_distance_to_line)
     if E4 == True:
         filename = f"homology_E4_tikz_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_start + picture_width - 1}.txt"
     else:
@@ -210,16 +220,21 @@ if mode == "1":
     os.chdir("homology_pictures")
 elif mode == "2":
     ts_start = input("Type desired ts start value (leave blank for default of 1): ")
-    ts_stop = input("Type desired ts stop value (leave blank for default of 11): ")
     if ts_start == "":
         ts_start = 1
     else:
         ts_start = int(ts_start)
+    ts_stop = input("Type desired ts stop value (leave blank for default of 11): ")
     if ts_stop == "":
         ts_stop = 11
     else:
         ts_stop = int(ts_stop)
-    code, ts_start, picture_width = generate_table_code(ts_start, ts_stop)
+    max_distance_to_line = input("Type desired max distance from line to plot (leave blank to include everything): ")
+    if max_distance_to_line == "":
+        max_distance_to_line = None
+    else:
+        max_distance_to_line = int(max_distance_to_line)
+    code, ts_start, picture_width = generate_table_code(ts_start, ts_stop, max_distance = max_distance_to_line)
     if E4 == True:
         filename = f"homology_table_E4_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_stop}.txt"
     else:
