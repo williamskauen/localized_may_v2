@@ -48,10 +48,7 @@ for i, filename in enumerate(data_files):
 
 file_number = input()
 data_file = data_files[int(file_number) - 1]
-if "E4" in data_file:
-    E4 = True
-else:
-    E4 = False
+page_number = int(data_file[data_file.index("p-") + 2])
 
 with open(data_file, "r") as f:
     csvreader = csv.reader(f)
@@ -63,12 +60,12 @@ with open(data_file, "r") as f:
     distance_to_line = round(float(second_line[3]), 2)
     localization_amount = int(second_line[4])
     signs = []
-    if localization_amount >= 3:
-        signs = 3*[-1]
+    if localization_amount >= 2:
+        signs = 2*[-1]
     else:
-        signs = localization_amount * [-1] + (3 - localization_amount) * [1]
+        signs = localization_amount * [-1] + (2 - localization_amount) * [1]
     
-    target_vars = ["h_{1,0}", "h_{1,1}", "h_{2,0}"]
+    target_vars = ["h_{1,0}", "h_{1,1}"]
     for i, sign in enumerate(signs):
         if sign == -1:
             target_vars[i] += "^{-1}"
@@ -76,7 +73,7 @@ with open(data_file, "r") as f:
     homology_classes = []
     for line in csvreader:
         homology_class = {}
-        data_fields = ["name", "ts_degree", "s_degree", "0_target", "1_target", "2_target"]
+        data_fields = ["name", "ts_degree", "s_degree", "0_target", "1_target"]
         for i, field in enumerate(data_fields):
             if field == "ts_degree" or field == "s_degree":
                 homology_class[field] = int(line[i])
@@ -90,9 +87,9 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_dist
     if localization_amount == 0:
         picture_height = picture_width
     else:
-        picture_height = int(distance_to_line + positive_slope * picture_width)
+        picture_height = int(max_distance + positive_slope * picture_width)
     classes_to_draw = []
-
+    degrees_to_draw = []
     for homology_class in homology_classes:
         ts_degree = homology_class["ts_degree"]
         s_degree = homology_class["s_degree"]
@@ -103,10 +100,11 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_dist
         if max_distance != None and line_height(ts_degree) - s_degree > max_distance + 0.00001:
             continue
         classes_to_draw.append(homology_class)
+        degrees_to_draw.append((ts_degree, s_degree))
     if localization_amount == 0:
         lowest_y = 0
     else:
-        lowest_y = math.floor(line_height(ts_start - 1) - distance_to_line + 0.001) + 1 # + 1 since this will be one above corner position
+        lowest_y = math.floor(line_height(ts_start - 1) - max_distance + 0.001) + 1 # + 1 since this will be one above corner position
 
     tikz_code = ["\\begin{tikzpicture}\n"]
 
@@ -119,9 +117,9 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_dist
         setup_lines.append(f"\\node at (-0.5, {i}) {{{j}}};")
 
     if localization_amount != 0:
-        line_offset = line_height(ts_start - 1) - distance_to_line - lowest_y + 1
+        line_offset = line_height(ts_start - 1) - max_distance - lowest_y + 1
         setup_lines.append(f"\\draw[green, thick] (0, {line_offset}) -- ({picture_width}, {positive_slope * picture_width + line_offset});")
-        setup_lines.append(f"\\draw[red, thick] (0, {distance_to_line + line_offset}) -- ({picture_width}, {positive_slope * picture_width + distance_to_line + line_offset});")
+        setup_lines.append(f"\\draw[red, thick] (0, {max_distance + line_offset}) -- ({picture_width}, {positive_slope * picture_width + max_distance + line_offset});")
 
     for line in setup_lines:
         tikz_code.append(format_line(line))
@@ -129,7 +127,6 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_dist
     dot_drawn = []
     zero_drawn = []
     one_drawn = []
-    two_drawn = []
 
     for homology_class in classes_to_draw:
         name = homology_class["name"]
@@ -137,7 +134,6 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_dist
         s_degree = homology_class["s_degree"]
         zero_target = homology_class["0_target"]
         one_target = homology_class["1_target"]
-        two_target = homology_class["2_target"]
 
         degree_pair = (ts_degree, s_degree)
         draw_ts = ts_degree - ts_start + 1
@@ -147,17 +143,13 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_dist
         if degree_pair not in dot_drawn:
             draw_code.append(f"\\filldraw[black] ({draw_ts}, {draw_s}) circle (1.5pt);")
 
-        if degree_pair not in zero_drawn and zero_target != "":
+        if degree_pair not in zero_drawn and zero_target != "" and (ts_degree, s_degree + signs[0]) in degrees_to_draw:
             draw_code.append(f"\\draw[->, black, thick] ({draw_ts}, {draw_s}) -- ({draw_ts}, {draw_s + signs[0] * 0.95});")
             zero_drawn.append(degree_pair)
 
-        if degree_pair not in one_drawn and one_target != "":
+        if degree_pair not in one_drawn and one_target != "" and (ts_degree + signs[1], s_degree + signs[1]) in degrees_to_draw:
             draw_code.append(f"\\draw[->, black, thick] ({draw_ts}, {draw_s}) -- ({draw_ts + signs[1] * 0.95}, {draw_s + signs[1] * 0.95});")
             one_drawn.append(degree_pair)
-
-        if degree_pair not in two_drawn and two_target != "":
-            draw_code.append(f"\\draw[->, black, thick] ({draw_ts}, {draw_s}) -- ({draw_ts + signs[2] * 1.95}, {draw_s + signs[2] * 0.95});")
-            two_drawn.append(degree_pair)
 
         for line in draw_code:
             tikz_code.append(format_line(line))
@@ -191,7 +183,6 @@ def generate_table_code(ts_start : int = 1, ts_stop : int = 5, max_distance : in
         s_degree = homology_class["s_degree"]
         zero_target = homology_class["0_target"]
         one_target = homology_class["1_target"]
-        two_target = homology_class["2_target"]
         table_row = f"${parse_name(name)} $ & ${ts_degree} $ & ${s_degree} $ & ${parse_name(zero_target)} $ & ${parse_name(one_target)} $ \\\\"
         table_code.append(format_line(table_row))
         table_code.append(format_line("\\hline"))
@@ -209,14 +200,11 @@ if mode == "1":
         ts_start = int(ts_start)
     max_distance_to_line = input("Type desired max distance from line to plot (leave blank to include everything): ")
     if max_distance_to_line == "":
-        max_distance_to_line = None
+        max_distance_to_line = distance_to_line
     else:
-        max_distance_to_line = int(max_distance_to_line)
+        max_distance_to_line = float(max_distance_to_line)
     code, ts_start, picture_width = generate_picture_code(ts_start, max_distance = max_distance_to_line)
-    if E4 == True:
-        filename = f"homology_E4_tikz_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_start + picture_width - 1}.txt"
-    else:
-        filename = f"homology_tikz_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_start + picture_width - 1}.txt"
+    filename = f"homology_tikz_l-{localization_amount}_p-{page_number}_d-{distance_to_line}_ts-{ts_start}-{ts_start + picture_width - 1}.txt"
     os.chdir("homology_pictures")
 elif mode == "2":
     ts_start = input("Type desired ts start value (leave blank for default of 1): ")
@@ -231,14 +219,11 @@ elif mode == "2":
         ts_stop = int(ts_stop)
     max_distance_to_line = input("Type desired max distance from line to plot (leave blank to include everything): ")
     if max_distance_to_line == "":
-        max_distance_to_line = None
+        max_distance_to_line = distance_to_line
     else:
-        max_distance_to_line = int(max_distance_to_line)
+        max_distance_to_line = float(max_distance_to_line)
     code, ts_start, picture_width = generate_table_code(ts_start, ts_stop, max_distance = max_distance_to_line)
-    if E4 == True:
-        filename = f"homology_table_E4_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_stop}.txt"
-    else:
-        filename = f"homology_table_l-{localization_amount}_d-{distance_to_line}_ts-{ts_start}-{ts_stop}.txt"
+    filename = f"homology_table_l-{localization_amount}_p-{page_number}_d-{distance_to_line}_ts-{ts_start}-{ts_stop}.txt"
     os.chdir("homology_tables")
 else:
     raise ValueError("Invalid mode")

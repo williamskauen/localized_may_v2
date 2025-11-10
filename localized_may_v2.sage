@@ -527,7 +527,11 @@ class MayE1:
 
 
     def write_data_file(self, page_number = 2):
-        if page_number == 2:
+        if page_number == 1:
+            homology_classes = []
+            for class_list in self.monomials.values():
+                homology_classes += class_list
+        elif page_number == 2:
             homology_classes = []
             for class_list in self.homology.values():
                 homology_classes += class_list
@@ -537,7 +541,8 @@ class MayE1:
             homology_classes = []
             for class_list in self.pages[page_number].values():
                 homology_classes += class_list
-        homology_classes = [self.project_to_homology(homology_class) for homology_class in homology_classes]
+        if page_number != 1:
+            homology_classes = [self.project_to_homology(homology_class) for homology_class in homology_classes]
         homology_classes.sort(key = lambda x : (self.ts_degree(x), self.s_degree(x), str(x)))
         if page_number == 2:
             distance_to_line = self.distance_to_line
@@ -555,14 +560,14 @@ class MayE1:
 
         if write_data:
             gens_to_multiply = []
-            gen_names = ["h_1_0", "h_1_1", "h_2_0"]
-            for i in range(0, 3):
+            gen_names = ["h_1_0", "h_1_1"]
+            for i in range(0, 2):
                 if i < self.localization_amount:
                     gens_to_multiply.append(self.ring(gen_names[i] + "_n"))
                 else:
                     gens_to_multiply.append(self.ring(gen_names[i]))
             lines_to_write = []
-            lines_to_write.append(["name", f"ts_degree", f"s_degree", f"{str(self.gens[0])}_target", f"{str(self.gens[1])}_target", f"{str(self.gens[2])}_target"])
+            lines_to_write.append(["name", f"ts_degree", f"s_degree", f"{str(self.gens[0])}_target", f"{str(self.gens[1])}_target"])
             if self.localization_amount == 0:
                 lines_to_write.append(["0"]*6)
             else:
@@ -577,25 +582,24 @@ class MayE1:
                 targets = []
                 for gen in gens_to_multiply:
                     distance_from_line = round(self.line_height(self.ts_degree(gen * homology_class)) - self.s_degree(gen * homology_class), 2)
-                    if (distance_from_line <= 0 or distance_from_line >= distance_to_line) and self.localization_amount != 0:
+                    if (distance_from_line < 0 or distance_from_line >= distance_to_line) and self.localization_amount != 0:
                         targets.append("")
                         continue
-                    if not self.is_cycle(gen * homology_class) or self.ts_min > self.ts_degree(gen * homology_class) or self.ts_max <= self.ts_degree(gen * homology_class):
+                    if (not self.is_cycle(gen * homology_class) or self.ts_min > self.ts_degree(gen * homology_class) or self.ts_max <= self.ts_degree(gen * homology_class)) and page_number > 1:
                         targets.append("")
                         continue
                     try:
-                        if self.project_to_later_page(gen * homology_class, page_number) in homology_classes: # This is valid since none of the homology representatives change under projection.
-                            targets.append(str(self.project_to_later_page(gen * homology_class, page_number)))
+                        if self.project_to_page(gen * homology_class, page_number) in homology_classes: # This is valid since none of the homology representatives change under projection.
+                            targets.append(str(self.project_to_page(gen * homology_class, page_number)))
                         else:
                             targets.append("")
                     except TypeError as e:
-                        print("here")
                         print(homology_class, targets)
                         raise e
                 for i, target in enumerate(targets):
                     if target == "0":
                         targets[i] = ""
-                lines_to_write.append([class_name, class_ts_degree, class_s_degree, targets[0], targets[1], targets[2]])
+                lines_to_write.append([class_name, class_ts_degree, class_s_degree, targets[0], targets[1]])
 
 
             with open(filename, "w") as f:
@@ -706,12 +710,15 @@ class MayE1:
         return E2n_dict
         
 
-    def project_to_later_page(self, polynomial, page_number):
+    def project_to_page(self, polynomial, page_number):
         ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
         degree = self.grading_group((ts, s))
-        if page_number == 2:
+        if page_number == 1:
+            result = polynomial
+        elif page_number == 2:
             result = self.project_to_homology(polynomial)
         else:
+            page_number = page_number - (page_number % 2)
             if degree in self.pages[page_number].keys():
                 basis = self.pages[page_number - 2][degree]
             else:
@@ -719,14 +726,14 @@ class MayE1:
             if self.localization_amount != 2:
                 raise ValueError("This is only implemented for localization amount 2")
             if degree in self.computed_projections[page_number].keys():
-                result = self.vector_polynomial(self.computed_projections[page_number][degree] * self.polynomial_vector(self.project_to_later_page(polynomial, page_number - 2), basis), (ts, s), basis)
+                result = self.vector_polynomial(self.computed_projections[page_number][degree] * self.polynomial_vector(self.project_to_page(polynomial, page_number - 2), basis), (ts, s), basis)
             else:
                 result = self.ring("0")
         return result
 
 input_values = input("Do you want to input parameters for the calculation? If not, the defaults in the code will be uses [y/n]: ")
 if input_values != "y":
-    May = MayE1(2, -10, 40, 5, generator_ts_cap = 150, debug = True)
+    May = MayE1(2, -10, 30, 5, generator_ts_cap = 150, debug = True)
 else:
     localization_amount = int(input("Input desired localization amount (number of the h(k)-s to invert): "))
     ts_min = int(input("Input desired t - s start value: "))
@@ -803,7 +810,7 @@ if May.debug:
     if May.localization_amount == 2:
         run_E2_line_tests()
 
-
+May.write_data_file(page_number = 1)
 May.write_data_file()
 if May.localization_amount == 2:
     May.write_data_file(page_number = 4)
