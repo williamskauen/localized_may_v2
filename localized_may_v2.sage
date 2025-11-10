@@ -733,7 +733,7 @@ class MayE1:
 
 input_values = input("Do you want to input parameters for the calculation? If not, the defaults in the code will be uses [y/n]: ")
 if input_values != "y":
-    May = MayE1(2, -10, 30, 5, generator_ts_cap = 150, debug = True)
+    May = MayE1(2, -15, 70, 6, generator_ts_cap = 150, debug = True)
 else:
     localization_amount = int(input("Input desired localization amount (number of the h(k)-s to invert): "))
     ts_min = int(input("Input desired t - s start value: "))
