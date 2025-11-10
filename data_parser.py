@@ -118,8 +118,8 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_dist
 
     if localization_amount != 0:
         line_offset = line_height(ts_start - 1) - max_distance - lowest_y + 1
-        setup_lines.append(f"\\draw[green, thick] (0, {line_offset}) -- ({picture_width}, {positive_slope * picture_width + line_offset});")
-        setup_lines.append(f"\\draw[red, thick] (0, {max_distance + line_offset}) -- ({picture_width}, {positive_slope * picture_width + max_distance + line_offset});")
+        setup_lines.append(f"\\draw[green, line width = 1mm] (0, {line_offset}) -- ({picture_width}, {positive_slope * picture_width + line_offset});")
+        setup_lines.append(f"\\draw[red, line width = 1mm] (0, {max_distance + line_offset}) -- ({picture_width}, {positive_slope * picture_width + max_distance + line_offset});")
 
     for line in setup_lines:
         tikz_code.append(format_line(line))
@@ -142,6 +142,7 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_dist
 
         if degree_pair not in dot_drawn:
             draw_code.append(f"\\filldraw[black] ({draw_ts}, {draw_s}) circle (1.5pt);")
+            dot_drawn.append(degree_pair)
 
         if degree_pair not in zero_drawn and zero_target != "" and (ts_degree, s_degree + signs[0]) in degrees_to_draw:
             draw_code.append(f"\\draw[->, black, thick] ({draw_ts}, {draw_s}) -- ({draw_ts}, {draw_s + signs[0] * 0.95});")
