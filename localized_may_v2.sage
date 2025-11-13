@@ -572,7 +572,7 @@ class MayE1:
             if self.localization_amount == 0:
                 lines_to_write.append(["0"]*6)
             else:
-                lines_to_write.append([f"{float(self.positive_slope)}", f"{float(self.negative_slope)}", f"{self.positive_constant_term}", f"{self.negative_constant_term}" f"{float(distance_to_line)}", f"{self.localization_amount}", f"{page_number}"])
+                lines_to_write.append([f"{float(self.positive_slope)}", f"{float(self.negative_slope)}", f"{self.positive_constant_term}", f"{self.negative_constant_term}", f"{float(distance_to_line)}", f"{self.localization_amount}", f"{page_number}"])
             for homology_class in homology_classes:
                 class_name = str(homology_class)
                 class_ts_degree = self.ts_degree(homology_class)
