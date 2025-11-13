@@ -90,7 +90,7 @@ with open(data_file, "r") as f:
 
 os.chdir("..")
 
-def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_distance : int = None) -> str:
+def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_distance : float = None) -> str:
     if localization_amount == 0:
         picture_height = picture_width
     else:
@@ -212,7 +212,7 @@ if mode == "1":
     else:
         max_distance_to_line = float(max_distance_to_line)
     code, ts_start, picture_width = generate_picture_code(ts_start, max_distance = max_distance_to_line)
-    filename = f"homology_tikz_l-{localization_amount}_p-{page_number}_d-{distance_to_line}_ts-{ts_start}-{ts_start + picture_width - 1}.txt"
+    filename = f"homology_tikz_l-{localization_amount}_p-{page_number}_d-{max_distance_to_line}_ts-{ts_start}-{ts_start + picture_width - 1}.txt"
     os.chdir("homology_pictures")
 elif mode == "2":
     ts_start = input("Type desired ts start value (leave blank for default of 1): ")
@@ -231,7 +231,7 @@ elif mode == "2":
     else:
         max_distance_to_line = float(max_distance_to_line)
     code, ts_start, picture_width = generate_table_code(ts_start, ts_stop, max_distance = max_distance_to_line)
-    filename = f"homology_table_l-{localization_amount}_p-{page_number}_d-{distance_to_line}_ts-{ts_start}-{ts_stop}.txt"
+    filename = f"homology_table_l-{localization_amount}_p-{page_number}_d-{max_distance_to_line}_ts-{ts_start}-{ts_stop}.txt"
     os.chdir("homology_tables")
 else:
     raise ValueError("Invalid mode")
