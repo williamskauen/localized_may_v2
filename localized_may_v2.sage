@@ -516,12 +516,13 @@ class MayE1:
         ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
         factor_ts, factor_s = self.ts_degree(factor), self.s_degree(factor)
         homology_basis = self.homology_in_degree((ts - factor_ts, s - factor_s))
-        available_vectors = [self.polynomial_vector(homology_class * factor) for homology_class in homology_basis]
+        available_vectors = [self.polynomial_vector(self.project_to_homology(homology_class * factor)) for homology_class in homology_basis]
         try:
-            solution_vector = matrix(self.base_ring, available_vectors).transpose().solve_right(self.polynomial_vector(polynomial))
+            solution_vector = matrix(self.base_ring, available_vectors).transpose().solve_right(self.polynomial_vector(self.project_to_homology(polynomial)))
             solution = self.project_to_homology(self.vector_polynomial(solution_vector, (ts - factor_ts, s - factor_s), homology_basis))
-        except ValueError:
+        except ValueError as e:
             print(f"cannot factor out {factor} from {polynomial}, or some other error ocurred")
+            raise e
             return None
         return solution
 
@@ -571,7 +572,7 @@ class MayE1:
             if self.localization_amount == 0:
                 lines_to_write.append(["0"]*6)
             else:
-                lines_to_write.append([f"{float(self.positive_slope)}", f"{float(self.negative_slope)}", f"{float(self.line_height(0))}", f"{float(distance_to_line)}", f"{self.localization_amount}", f"{page_number}"])
+                lines_to_write.append([f"{float(self.positive_slope)}", f"{float(self.negative_slope)}", f"{self.positive_constant_term}", f"{self.negative_constant_term}" f"{float(distance_to_line)}", f"{self.localization_amount}", f"{page_number}"])
             for homology_class in homology_classes:
                 class_name = str(homology_class)
                 class_ts_degree = self.ts_degree(homology_class)
@@ -582,7 +583,7 @@ class MayE1:
                 targets = []
                 for gen in gens_to_multiply:
                     distance_from_line = round(self.line_height(self.ts_degree(gen * homology_class)) - self.s_degree(gen * homology_class), 2)
-                    if (distance_from_line < 0 or distance_from_line >= distance_to_line) and self.localization_amount != 0:
+                    if (distance_from_line < 0 or distance_from_line > distance_to_line) and self.localization_amount != 0:
                         targets.append("")
                         continue
                     if (not self.is_cycle(gen * homology_class) or self.ts_min > self.ts_degree(gen * homology_class) or self.ts_max <= self.ts_degree(gen * homology_class)) and page_number > 1:
@@ -814,5 +815,3 @@ May.write_data_file(page_number = 1)
 May.write_data_file()
 if May.localization_amount == 2:
     May.write_data_file(page_number = 4)
-
-

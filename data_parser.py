@@ -5,8 +5,14 @@ import csv
 def format_line(line):
     return f"   {line}\n"
 
-def line_height(ts):
+def positive_line_height(ts):
     return positive_slope * ts + positive_constant_term
+
+def negative_line_height(ts):
+    return negative_slope * ts + negative_constant_term
+
+def line_height(ts):
+    return min(positive_line_height(ts), negative_line_height(ts))
 
 def parse_name(name : str, full = False) -> str:
     if name == "":
@@ -48,7 +54,6 @@ for i, filename in enumerate(data_files):
 
 file_number = input()
 data_file = data_files[int(file_number) - 1]
-page_number = int(data_file[data_file.index("p-") + 2])
 
 with open(data_file, "r") as f:
     csvreader = csv.reader(f)
@@ -57,8 +62,10 @@ with open(data_file, "r") as f:
     positive_slope = float(second_line[0])
     negative_slope = float(second_line[1])
     positive_constant_term = float(second_line[2])
-    distance_to_line = round(float(second_line[3]), 2)
-    localization_amount = int(second_line[4])
+    negative_constant_term = float(second_line[3])
+    distance_to_line = round(float(second_line[4]), 2)
+    localization_amount = int(second_line[5])
+    page_number = int(second_line[6])
     signs = []
     if localization_amount >= 2:
         signs = 2*[-1]
