@@ -73,9 +73,6 @@ with open(data_file, "r") as f:
         signs = localization_amount * [-1] + (2 - localization_amount) * [1]
     
     target_vars = ["h_{1,0}", "h_{1,1}"]
-    for i, sign in enumerate(signs):
-        if sign == -1:
-            target_vars[i] += "^{-1}"
     
     homology_classes = []
     for line in csvreader:
@@ -151,12 +148,12 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_dist
             draw_code.append(f"\\filldraw[black] ({draw_ts}, {draw_s}) circle (1.5pt);")
             dot_drawn.append(degree_pair)
 
-        if degree_pair not in zero_drawn and zero_target != "" and (ts_degree, s_degree + signs[0]) in degrees_to_draw:
-            draw_code.append(f"\\draw[->, black, thick] ({draw_ts}, {draw_s}) -- ({draw_ts}, {draw_s + signs[0] * 0.95});")
+        if degree_pair not in zero_drawn and zero_target != "" and (ts_degree, s_degree + 1) in degrees_to_draw:
+            draw_code.append(f"\\draw[->, black, thick] ({draw_ts}, {draw_s}) -- ({draw_ts}, {draw_s + 0.95});")
             zero_drawn.append(degree_pair)
 
-        if degree_pair not in one_drawn and one_target != "" and (ts_degree + signs[1], s_degree + signs[1]) in degrees_to_draw:
-            draw_code.append(f"\\draw[->, black, thick] ({draw_ts}, {draw_s}) -- ({draw_ts + signs[1] * 0.95}, {draw_s + signs[1] * 0.95});")
+        if degree_pair not in one_drawn and one_target != "" and (ts_degree + 1, s_degree + 1) in degrees_to_draw:
+            draw_code.append(f"\\draw[->, black, thick] ({draw_ts}, {draw_s}) -- ({draw_ts + 0.95}, {draw_s + 0.95});")
             one_drawn.append(degree_pair)
 
         for line in draw_code:

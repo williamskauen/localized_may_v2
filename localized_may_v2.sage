@@ -70,6 +70,8 @@ class MayE1:
         self.smith_complex, self.smith_isomorphism, self.smith_isomorphism_inverse = self.make_smith_complex(self.complex)
         self.homology_projections = self.make_homology_projections(self.complex, self.smith_isomorphism, self.smith_isomorphism_inverse)
         self.homology = self.compute_homology()
+        self.implemented_differentials = {1 : self.d1}
+        self.computed_projections = {2 : self.homology_projections}
 
         if self.localization_amount == 2:
             self.double_localized_E2_lines =  {0 : (("h_1_0_n * h_1_1_n * h_2_0", "0"),),
@@ -85,8 +87,7 @@ class MayE1:
                         10: (("h_1_0_n * h_1_1_n * h_2_0 * h_1_3^2", "0"), ("h_1_0_n * h_1_1_n^11 * h_2_0", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n^2 * h_2_0 * h_2_1^2 + h_1_0_n * h_1_1_n^3 * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^5 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n^3 * h_2_0 * h_1_3"), ("h_1_0_n * h_1_1_n^6 * h_2_0 * h_1_3", "0"), ("h_1_0_n^5 * h_1_1_n * h_2_0 * h_1_2^2", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_3_0^2", "h_1_0_n^2 * h_1_1_n * h_2_0^3 * h_1_3"), ("h_1_0_n^2 * h_1_1_n^8 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^7 * h_2_0 * h_3_0", "0"), ("h_1_0_n^2 * h_1_1_n^2 * h_2_0^3 * h_1_2 * h_2_1^2 + h_1_0_n * h_1_1_n * h_2_0 * h_2_1^2 * h_3_0", "0"), ("h_1_0_n^6 * h_1_1_n * h_2_0", "0"), ("h_1_0_n^4 * h_1_1_n * h_2_0 * h_1_2^4", "0"), ("h_1_0_n^2 * h_1_1_n * h_1_2^5 * h_2_1", "0"), ("h_1_0_n * h_1_1_n * h_1_2^7 * h_2_1", "0"))
                         }
 
-            self.implemented_differentials = {3 : self.d_3}
-            self.computed_projections = {2 : self.homology_projections}
+            self.implemented_differentials[3] = self.d3
 
             self.E4, self.E4_complex, self.E4_smith_complex, self.E4_smith_isomorphism, self.E4_smith_isomorphism_inverse = self.compute_double_localized_E2n(2, self.homology, self.double_localized_E2_lines)
 
@@ -117,10 +118,7 @@ class MayE1:
 
     def monomial_tuple(self, monomial):
         # Takes a monomial and returns a tuple of the exponents.
-        if monomial == self.ring("0"):
-            return tuple([0 for variable in self.gens])
-        else:
-            return tuple([monomial.degree(variable) for variable in self.gens])
+        return tuple(monomial.degrees())
 
 
     def tuple_monomial(self, tup):
@@ -194,6 +192,36 @@ class MayE1:
             result += coefficient * basis[i]
         if page != 1:
             result = self.project_to_page(result, page)
+        return result
+
+    
+    def multiply_h_1_0(self, polynomial):
+        if self.localization_amount == 0:
+            return self.gens[0] * polynomial
+        else:
+            result = self.ring("0")
+            if polynomial == self.ring("0"):
+                return self.ring("0")
+            for monomial in polynomial.monomials():
+                monomial_list = list(self.monomial_tuple(monomial))
+                monomial_list[0] -= 1
+                if monomial_list[0] > 0:
+                    result += self.tuple_monomial(tuple(monomial_list))
+        return result
+
+
+    def multiply_h_1_1(self, polynomial):
+        if self.localization_amount <= 1:
+            return self.gens[1] * polynomial
+        else:
+            result = self.ring("0")
+            if polynomial == self.ring("0"):
+                return self.ring("0")
+            for monomial in polynomial.monomials():
+                monomial_list = list(self.monomial_tuple(monomial))
+                monomial_list[1] -= 1
+                if monomial_list[1] > 0:
+                    result += self.tuple_monomial(tuple(monomial_list))
         return result
 
 
@@ -463,8 +491,10 @@ class MayE1:
         return ChainComplex(data = smith_differentials, base_ring = self.base_ring, grading_group = self.grading_group, degree = (-1, 1)), chain_isomorphism, chain_isomorphism_inverse
 
 
-    def is_cycle(self, polynomial):
-        return self.d1(polynomial) == self.ring("0")
+    def is_cycle(self, polynomial, page_number = 1):
+        if page_number == 0:
+            return True # Added for convenience, since everything survives to the E1-page
+        return self.implemented_differentials[page_number](polynomial) == self.ring("0")
 
 
     def make_homology_projections(self, chain_complex, smith_isomorphism, smith_isomorphism_inverse):
@@ -551,7 +581,6 @@ class MayE1:
         except ValueError as e:
             print(f"cannot factor out {factor} from {polynomial}, or some other error ocurred")
             raise e
-            return None
         return solution
 
 
@@ -588,15 +617,8 @@ class MayE1:
                 os.remove(filename)
 
         if write_data:
-            gens_to_multiply = []
-            gen_names = ["h_1_0", "h_1_1"]
-            for i in range(0, 2):
-                if i < self.localization_amount:
-                    gens_to_multiply.append(self.ring(gen_names[i] + "_n"))
-                else:
-                    gens_to_multiply.append(self.ring(gen_names[i]))
             lines_to_write = []
-            lines_to_write.append(["name", f"ts_degree", f"s_degree", f"{str(self.gens[0])}_target", f"{str(self.gens[1])}_target"])
+            lines_to_write.append(["name", f"ts_degree", f"s_degree", "h_1_0_target", "h_1_1_target"])
             if self.localization_amount == 0:
                 lines_to_write.append(["0"]*6)
             else:
@@ -605,29 +627,37 @@ class MayE1:
                 class_name = str(homology_class)
                 class_ts_degree = self.ts_degree(homology_class)
                 class_s_degree = self.s_degree(homology_class)
+                degree = self.grading_group((class_ts_degree, class_s_degree))
                 if ((class_s_degree < self.line_height(class_ts_degree) - self.distance_to_line) or (class_s_degree > self.line_height(class_ts_degree)) or (class_ts_degree > self.ts_max) or (class_ts_degree < self.ts_min)) and self.localization_amount != 0:
                     continue
                 #print((class_s_degree, class_ts_degree))
                 targets = []
-                for gen in gens_to_multiply:
+                for i in range(2):
+                    if i == 0:
+                        gen = self.multiply_h_1_0
+                    if i == 1:
+                        gen = self.multiply_h_1_1
+
+                    if gen(homology_class) == self.ring("0"): # We have to do the multiplication with h_1_0 or h_1_1 this way, due once again to the way we handle the negative exponents
+                        targets.append("")
+                        continue
                     if page_number <= 2:
-                        distance_from_line = round(self.line_height(self.ts_degree(gen * homology_class)) - self.s_degree(gen * homology_class), 2)
+                        distance_from_line = round(self.line_height(self.ts_degree(gen(homology_class))) - self.s_degree(gen(homology_class)), 2)
                     else:
-                        distance_from_line = round(self.positive_line_height(self.ts_degree(gen * homology_class)) - self.s_degree(gen * homology_class), 2) # We need positive_line_height here instead, due to the way we are calculating the higher differentials
+                        distance_from_line = round(self.positive_line_height(self.ts_degree(gen(homology_class))) - self.s_degree(gen(homology_class)), 2) # We need positive_line_height here instead, due to the way we are calculating the higher differentials
                     if (distance_from_line < 0 or distance_from_line > distance_to_line) and self.localization_amount != 0:
                         targets.append("")
                         continue
-                    if (not self.is_cycle(gen * homology_class) or self.ts_min > self.ts_degree(gen * homology_class) or self.ts_max <= self.ts_degree(gen * homology_class)) and page_number > 1:
+                    if self.ts_min > self.ts_degree(gen(homology_class)) or self.ts_max <= self.ts_degree(gen(homology_class)):
                         targets.append("")
                         continue
-                    try:
-                        if self.project_to_page(gen * homology_class, page_number) in homology_classes: # This is valid since none of the homology representatives change under projection.
-                            targets.append(str(self.project_to_page(gen * homology_class, page_number)))
-                        else:
-                            targets.append("")
-                    except TypeError as e:
-                        print(homology_class, targets)
-                        raise e
+                    if not self.is_cycle(gen(homology_class), page_number - 1):
+                        targets.append("")
+                        continue
+                    if self.project_to_page(gen(homology_class), page_number) in homology_classes: # This is valid since none of the homology representatives change under projection.
+                        targets.append(str(self.project_to_page(gen(homology_class), page_number)))
+                    else:
+                        targets.append("")
                 for i, target in enumerate(targets):
                     if target == "0":
                         targets[i] = ""
@@ -642,47 +672,45 @@ class MayE1:
         os.chdir("..")
 
 
-    def d_3(self, polynomial, E2_lines):
-        if self.localization_amount != 2:
+    def d3(self, polynomial): # polynomial has to be homogeneous
+        if self.localization_amount == 2:
+            E2_lines = self.double_localized_E2_lines
+        else:
             raise ValueError("This is only implemented for localization amount 2")
         polynomial = self.project_to_homology(polynomial)
+        if polynomial == self.ring("0"):
+            return 0
         result = self.ring("0")
         ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
         line_number = int((self.positive_line_height(ts) - s) * 2) # We have to use positive line height for it to work correctly with the h_2_0-multiplication lines
         line = [[self.project_to_homology(self.ring(x[0])), self.project_to_homology(self.ring(x[1]))] for x in E2_lines[line_number]]
-        found = False
+        line_basis = []
+        line_basis_differentials = []
         for element, differential in line:
             exponent = int((ts - self.ts_degree(element)) / 2)
             if exponent % 2 == 1 or exponent < 0:
                 continue
-            if self.project_to_homology(element * self.ring(f"h_2_0^{exponent}")) == polynomial:
-                found = True
-                result = differential * self.ring(f"h_2_0^{exponent}")
-                if exponent % 4 == 2:
-                    for monomial in element.monomials():
-                        monomial_list = list(self.monomial_tuple(monomial))
-                        summand1 = monomial_list.copy()
-                        summand2 = monomial_list.copy()
-                        
-                        # The below corresponds to the May d3-differential of h_2_0^2 being h_1_1^3 + h_1_0 * h_1_2
-                        summand1[1] -= 3
-                        summand1[2] += exponent - 2
-                        if summand1[1] > 0:
-                            result += self.tuple_monomial(tuple(summand1))
-                        
-                        summand2[0] -= 2
-                        summand2[2] += exponent - 2
-                        summand2[3] += 1 # This is + while the above is - due to the (slightly clunky) way we handle the negative exponents
-                        if summand2[0] > 0:
-                            result += self.tuple_monomial(tuple(summand2))
-                break
-            
-        if found == False:
-            raise ValueError(f"Did not find a match for {polynomial} in line {line_number}.")
+            basis_element = element * self.ring("h_2_0")^exponent
+            line_basis.append(basis_element)
+            basis_element_differential = differential * self.ring("h_2_0")^exponent
+            if exponent % 4 == 2:
+                basis_element_differential += self.multiply_h_1_0(self.multiply_h_1_0(element * self.ring("h_2_0")^(exponent - 2) * self.ring("h_1_2")))
+                basis_element_differential += self.multiply_h_1_1(self.multiply_h_1_1(self.multiply_h_1_1(element * self.ring("h_2_0")^(exponent - 2))))
+            line_basis_differentials.append(self.project_to_homology(basis_element_differential))
+        try:
+            polynomial_decomposition = self.polynomial_vector(polynomial, (ts, s), line_basis, page = 2)
+        except Exception as e:
+            print(f"Could not represent {polynomial} in basis {line_basis}, or some other error ocurred")
+            raise e
+        
+        result = self.ring("0")
+        for i, coefficient in enumerate(polynomial_decomposition):
+            result += coefficient * line_basis_differentials[i]
+        
         try:
             result = self.project_to_homology(result)
         except ValueError as e:
-            print(f"d_3-error \npolynomial = {polynomial} \nresult = {result} \nmonomial_list = {monomial_list} \nsummand1 = {summand1} \nsummand2 = {summand2} \nline_number = {line_number} \nelement = {element} \ndifferential = {differential}")
+            print(f"d_3-error \npolynomial = {polynomial} \nresult = {result}")
             raise e
         return result
                     
@@ -707,7 +735,7 @@ class MayE1:
             if degree_pair + differential_degree not in previous_page.keys():
                 continue
             for homology_class in previous_page[degree_pair]:
-                matrix_columns.append(self.polynomial_vector(differential(homology_class, previous_lines), degree_pair + differential_degree, basis = previous_page[degree_pair + differential_degree], page = 2))
+                matrix_columns.append(self.polynomial_vector(differential(homology_class), degree_pair + differential_degree, basis = previous_page[degree_pair + differential_degree], page = 2))
 
             if len(matrix_columns) == 0:
                 matrix_dict[degree_pair] = matrix(self.base_ring, nrows = 0, ncols = len(previous_homology[degree_pair]))
@@ -744,6 +772,8 @@ class MayE1:
     def project_to_page(self, polynomial, page_number):
         if polynomial == self.ring("0"):
             return self.ring("0")
+        if page_number > 1 and (not self.is_cycle(polynomial, page_number - 1)):
+            raise ValueError(f"{polynomial} is not a cycle on page {page_number - 1}")
         ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
         degree = self.grading_group((ts, s))
         if page_number == 1:
@@ -761,7 +791,7 @@ class MayE1:
             if degree in self.computed_projections[page_number].keys():
                 result = self.vector_polynomial(self.computed_projections[page_number][degree] * self.polynomial_vector(self.project_to_page(polynomial, page_number - 2), (ts, s), basis, page = page_number - 2), (ts, s), basis)
             else:
-                result = self.ring("0")
+                raise ValueError(f"{polynomial} outside computation range")
         return result
 
 input_values = input("Do you want to input parameters for the calculation? If not, the defaults in the code will be used [y/n]: ")
@@ -831,6 +861,23 @@ def run_E2_line_tests():
             if abs(line_distance - round(line/2, 3)) > 0.00001:
                 print(line, pair, line_distance)
 
+def run_d3_tests():
+    homology_classes = []
+    for homology_list in May.homology.values():
+        homology_classes += homology_list
+    for homology_class in homology_classes:
+        max_distance = max(May.double_localized_E2_lines.keys()) / 2
+        ts = May.ts_degree(homology_class)
+        s = May.s_degree(homology_class)
+        if May.positive_line_height(ts) - s > -0.0001 and May.positive_line_height(ts) - s < max_distance + 0.0001:
+            try:
+                if homology_class == May.ring("h_1_0_n*h_1_1_n^5*h_2_0^3*h_1_3 + h_1_0_n*h_1_1_n^4*h_2_0*h_2_1^2"):
+                    print("here")
+                result = May.d3(homology_class)
+            except ValueError as e:
+                print("Missing element in line, or other error ocurred (see below)")
+                raise e
+
 def run_other_tests():
     print(May.complex) 
 
@@ -842,6 +889,7 @@ if May.debug:
     run_homology_projection_test()
     if May.localization_amount == 2:
         run_E2_line_tests()
+        run_d3_tests()
 
 May.write_data_file(page_number = 1)
 May.write_data_file()
