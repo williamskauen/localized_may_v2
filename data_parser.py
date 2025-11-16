@@ -45,6 +45,11 @@ def parse_name(name : str, full = False) -> str:
             new_name = new_name.split("+")[0] + "+ \\cdots"
     return new_name
 
+if "homology_pictures" not in os.listdir():
+    os.mkdir("homology_pictures")
+
+if "homology_tables" not in os.listdir():
+    os.mkdir("homology_tables")
 
 os.chdir("homology_data")
 data_files = os.listdir()

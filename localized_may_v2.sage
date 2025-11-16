@@ -74,7 +74,7 @@ class MayE1:
         self.computed_projections = {2 : self.homology_projections}
 
         if self.localization_amount == 2:
-            self.double_localized_E2_lines =  {0 : (("h_1_0_n * h_1_1_n * h_2_0", "0"),),
+            self.all_double_localized_E2_lines =  {0 : (("h_1_0_n * h_1_1_n * h_2_0", "0"),),
                         1 : (("h_1_0_n * h_1_1_n^2 * h_2_0", "0"),),
                         2 : (("h_1_0_n^2 * h_1_1_n * h_2_0", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0", "0")),
                         3 : (("h_1_0_n * h_1_1_n^4 * h_2_0", "0"), ("h_1_0_n * h_1_1_n * h_2_1", "0")),
@@ -84,14 +84,30 @@ class MayE1:
                         7 : (("h_1_0_n * h_1_1_n^2 * h_2_0 * h_2_1^2", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n^8 * h_2_0", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_3", "0"), ("h_1_0_n^2 * h_1_1_n^5 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^4 * h_2_0 * h_3_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_1", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^3", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_2^5", "0")),
                         8 : (("h_1_0_n * h_1_1_n * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n * h_2_0 * h_1_3"), ("h_1_0_n * h_1_1_n^4 * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n^9 * h_2_0", "0"), ("h_1_0_n^5 * h_1_1_n * h_2_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_1_2 * h_2_1", "0"), ("h_1_0_n^2 * h_1_1_n^6 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^5 * h_2_0 * h_3_0", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^4", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_2^6", "0")),
                         9 : (("h_1_0_n * h_1_1_n^10 * h_2_0", "0"), ("h_1_0_n * h_1_1_n^2 * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n * h_2_0 * h_2_1^2 + h_1_0_n * h_1_1_n^2 * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^5 * h_2_0 * h_1_3", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_3", "0"), ("h_1_0_n * h_1_1_n^4 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n^2 * h_2_0 * h_1_3"), ("h_1_0_n^5 * h_1_1_n * h_2_0 * h_1_2", "0"), ("h_1_0_n^2 * h_1_1_n^7 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^6 * h_2_0 * h_3_0", "0"), ("h_1_0_n^4 * h_1_1_n * h_2_0 * h_1_2^3", "0"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_1_2^5", "0"), ("h_1_0_n * h_1_1_n * h_1_2^6 * h_2_1", "0")),
-                        10: (("h_1_0_n * h_1_1_n * h_2_0 * h_1_3^2", "0"), ("h_1_0_n * h_1_1_n^11 * h_2_0", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n^2 * h_2_0 * h_2_1^2 + h_1_0_n * h_1_1_n^3 * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^5 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n^3 * h_2_0 * h_1_3"), ("h_1_0_n * h_1_1_n^6 * h_2_0 * h_1_3", "0"), ("h_1_0_n^5 * h_1_1_n * h_2_0 * h_1_2^2", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_3_0^2", "h_1_0_n^2 * h_1_1_n * h_2_0^3 * h_1_3"), ("h_1_0_n^2 * h_1_1_n^8 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^7 * h_2_0 * h_3_0", "0"), ("h_1_0_n^2 * h_1_1_n^2 * h_2_0^3 * h_1_2 * h_2_1^2 + h_1_0_n * h_1_1_n * h_2_0 * h_2_1^2 * h_3_0", "0"), ("h_1_0_n^6 * h_1_1_n * h_2_0", "0"), ("h_1_0_n^4 * h_1_1_n * h_2_0 * h_1_2^4", "0"), ("h_1_0_n^2 * h_1_1_n * h_1_2^5 * h_2_1", "0"), ("h_1_0_n * h_1_1_n * h_1_2^7 * h_2_1", "0"))
+                        10: (("h_1_0_n * h_1_1_n * h_2_0 * h_1_3^2", "0"), ("h_1_0_n * h_1_1_n^11 * h_2_0", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n^2 * h_2_0 * h_2_1^2 + h_1_0_n * h_1_1_n^3 * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^5 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n^3 * h_2_0 * h_1_3"), ("h_1_0_n * h_1_1_n^6 * h_2_0 * h_1_3", "0"), ("h_1_0_n^5 * h_1_1_n * h_2_0 * h_1_2^2", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_3_0^2", "h_1_0_n^2 * h_1_1_n * h_2_0^3 * h_1_3"), ("h_1_0_n^2 * h_1_1_n^8 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^7 * h_2_0 * h_3_0", "0"), ("h_1_0_n^2 * h_1_1_n^2 * h_2_0^3 * h_1_2 * h_2_1^2 + h_1_0_n * h_1_1_n * h_2_0 * h_2_1^2 * h_3_0", "0"), ("h_1_0_n^6 * h_1_1_n * h_2_0", "0"), ("h_1_0_n^4 * h_1_1_n * h_2_0 * h_1_2^4", "0"), ("h_1_0_n^2 * h_1_1_n * h_1_2^5 * h_2_1", "0"), ("h_1_0_n * h_1_1_n * h_1_2^7 * h_2_1", "0")),
+                        11: (("h_1_0_n * h_1_1_n^12 * h_2_0", "0"), ("h_1_0_n * h_1_1_n^2 * h_2_0 * h_1_3^2", "0"), ("h_1_0_n * h_1_1_n^4 * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n^3 * h_2_0 * h_2_1^2 + h_1_0_n * h_1_1_n^4 * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^6 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n^4 * h_2_0 * h_1_3"), ("h_1_0_n * h_1_1_n^7 * h_2_0 * h_1_3", "0"), ("h_1_0_n^4 * h_1_1_n * h_1_2^2 * h_2_1", "0"), ("h_1_0_n * h_1_1_n * h_2_1 * h_3_0^2", "0"), ("h_1_0_n^4 * h_1_1_n * h_2_0 * h_1_3", "0"), ("h_1_0_n^2 * h_1_1_n^9 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^8 * h_2_0 * h_3_0", "0"), ("h_1_0_n * h_1_1_n^3 * h_2_0^2 * h_2_1^3 + h_1_0_n * h_1_1_n^2 * h_2_0 * h_2_1^2 * h_3_0", "0"), ("h_1_0_n^6 * h_1_1_n * h_2_0 * h_1_2", "0"), ("h_1_0_n^2 * h_1_1_n * h_1_2^6 * h_2_1", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_2^9", "0"), ("h_1_0_n^4 * h_1_1_n * h_2_0 * h_1_2^5", "0")),
+                        12: (("h_1_0_n * h_1_1_n^13 * h_2_0", "0"), ("h_1_0_n^7 * h_1_1_n * h_2_0", "0"), ("h_1_0_n * h_1_1_n^5 * h_2_0 * h_3_0^2", "h_1_0_n * h_1_1_n^4 * h_2_0 * h_2_1^2 + h_1_0_n * h_1_1_n^5 * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^7 * h_2_0 * h_2_1^2", "h_1_0_n * h_1_1_n^5 * h_2_0 * h_1_3"), ("h_1_0_n^3 * h_1_1_n * h_2_0 * h_3_0^2", "h_1_0_n^3 * h_1_1_n * h_2_0^3 * h_1_3"), ("h_1_0_n * h_1_1_n^3 * h_2_0 * h_1_3^2", "0"), ("h_1_0_n * h_1_1_n^8 * h_2_0 * h_1_3", "0"), ("h_1_0_n^2 * h_1_1_n^10 * h_2_0^3 * h_1_2 + h_1_0_n * h_1_1_n^9 * h_2_0 * h_3_0", "0"), ("h_1_0_n * h_1_1_n^4 * h_2_0^2 * h_2_1^3 + h_1_0_n * h_1_1_n^3 * h_2_0 * h_2_1^2 * h_3_0", "0"), ("h_1_0_n^2 * h_1_1_n^2 * h_2_0^3 * h_1_2 * h_3_0^2 + h_1_0_n * h_1_1_n * h_2_0 * h_3_0^3", "h_1_0_n^3 * h_1_1_n * h_2_0^4 * h_1_2^2 * h_2_1"), ("h_1_0_n * h_1_1_n^7 * h_2_0 * h_2_1^2", "0"), ("h_1_0_n^6 * h_1_1_n * h_2_0 * h_1_2^2", "0"), ("h_1_0_n^2 * h_1_1_n * h_1_2^7 * h_2_1", "0"), ("h_1_0_n * h_1_1_n * h_1_2^9 * h_2_1", "0"), ("h_1_0_n^5 * h_1_1_n * h_2_0 * h_1_2^4", "0"), ("h_1_0_n^2 * h_1_1_n * h_2_0 * h_1_3^2", "0"), ("h_1_0_n * h_1_1_n * h_1_2 * h_2_1 * h_3_0^2", "0"), ("h_1_0_n^4 * h_1_1_n * h_2_0 * h_1_2^6", "0"))
                         }
+            self.double_localized_E2_lines = {}
+            for line in self.all_double_localized_E2_lines.keys():
+                self.double_localized_E2_lines[line] = []
+                for pair in self.all_double_localized_E2_lines[line]:
+                    if self.ts_degree(self.ring(pair[0])) <= self.ts_max:
+                        self.double_localized_E2_lines[line].append(pair)
 
-            self.implemented_differentials[3] = self.d3
+            lower_too_high = False
+            for line in self.double_localized_E2_lines.keys():
+                for pair in self.double_localized_E2_lines[line]:
+                    if self.ts_degree(self.ring(pair[0])) < self.ts_min:
+                        lower_too_high = True
+                        print(f"Warning: element on line {line} below lower bound, so cannot compute E4, skipping it")
+                        break
+            if not lower_too_high:
+                self.implemented_differentials[3] = self.d3
 
-            self.E4, self.E4_complex, self.E4_smith_complex, self.E4_smith_isomorphism, self.E4_smith_isomorphism_inverse = self.compute_double_localized_E2n(2, self.homology, self.double_localized_E2_lines)
+                self.E4, self.E4_complex, self.E4_smith_complex, self.E4_smith_isomorphism, self.E4_smith_isomorphism_inverse = self.compute_double_localized_E2n(2, self.homology, self.double_localized_E2_lines)
 
-            self.pages = {2 : self.homology, 4 : self.E4}
+                self.pages = {2 : self.homology, 4 : self.E4}
         
     
     def ts_degree(self, polynomial) -> int:
@@ -171,6 +187,8 @@ class MayE1:
         elif page == 2:
             if self.project_to_homology(polynomial) == self.ring("0"):
                 return vector(self.base_ring, len(basis) * [0])
+            if basis == None:
+                basis = self.homology_in_degree((self.ts_degree(polynomial), self.s_degree(polynomial)))
             basis_vectors = []
             for element in basis:
                 element = self.project_to_homology(element)
@@ -180,6 +198,7 @@ class MayE1:
                 result = matrix(self.base_ring, basis_vectors).transpose().solve_right(self.polynomial_vector(self.project_to_homology(polynomial), degree_pair))
             except ValueError as e:
                 print(f"{self.project_to_homology(polynomial)}, {basis_vectors}")
+                raise e
         return result
 
 
@@ -567,17 +586,17 @@ class MayE1:
 
     
     def can_factor_homology(self, polynomial, factor = "h_2_0^2"):
-        if self.project_to_homology(olynomial) == self.ring("0"):
+        if self.project_to_homology(polynomial) == self.ring("0"):
             return self.ring("0")
         if factor != None:
             factor = self.ring(factor)
         ts, s = self.ts_degree(polynomial), self.s_degree(polynomial)
         factor_ts, factor_s = self.ts_degree(factor), self.s_degree(factor)
         homology_basis = self.homology_in_degree((ts - factor_ts, s - factor_s))
-        available_vectors = [self.polynomial_vector(self.project_to_homology(homology_class * factor, (ts, s))) for homology_class in homology_basis]
+        available_vectors = [self.polynomial_vector(self.project_to_homology(homology_class * factor), (ts, s), page = 2) for homology_class in homology_basis]
         try:
-            solution_vector = matrix(self.base_ring, available_vectors).transpose().solve_right(self.polynomial_vector(self.project_to_homology(polynomial), (ts, s)))
-            solution = self.project_to_homology(self.vector_polynomial(solution_vector, (ts - factor_ts, s - factor_s), homology_basis))
+            solution_vector = matrix(self.base_ring, available_vectors).transpose().solve_right(self.polynomial_vector(self.project_to_homology(polynomial), (ts, s), page = 2))
+            solution = self.project_to_homology(self.vector_polynomial(solution_vector, (ts - factor_ts, s - factor_s), homology_basis, page = 2))
         except ValueError as e:
             print(f"cannot factor out {factor} from {polynomial}, or some other error ocurred")
             raise e
@@ -605,7 +624,7 @@ class MayE1:
         if page_number <= 2:
             distance_to_line = self.distance_to_line
         elif page_number == 4:
-            distance_to_line = round(max(self.double_localized_E2_lines.keys()) / 2, 2)
+            distance_to_line = round((max(self.double_localized_E2_lines.keys()) / 2) - 1.5, 2)
         filename = f"homology_data_l-{self.localization_amount}_p-{page_number}_d-{distance_to_line}_ts-{self.ts_min}-{self.ts_max}.csv"
         os.chdir("homology_data")
         write_data = True
@@ -719,11 +738,9 @@ class MayE1:
         differential_degree = self.complex.degree_of_differential()
         differential = self.implemented_differentials[2*n - 1]
         E2n_dict = {}
-        max_line_distance = (len(previous_lines.keys()) - 1) / 2
+        max_line_distance = min(self.distance_to_line, (len(previous_lines.keys()) - 1) / 2)
         if self.localization_amount != 2:
             raise ValueError("This is only implemented for localization amount 2")
-        if self.distance_to_line < max_line_distance:
-            raise ValueError("May class has too small computation range")
         previous_page = {}
         for degree_pair in previous_homology.keys():
             if self.positive_line_height(degree_pair[0]) - degree_pair[1] - max_line_distance < 0.0001: # positive_line_height for same reason as in d_3
@@ -794,6 +811,9 @@ class MayE1:
                 raise ValueError(f"{polynomial} outside computation range")
         return result
 
+if "homology_data" not in os.listdir():
+    os.mkdir("homology_data")
+
 input_values = input("Do you want to input parameters for the calculation? If not, the defaults in the code will be used [y/n]: ")
 if input_values != "y":
     May = MayE1(2, -15, 70, 6, generator_ts_cap = 150, debug = True)
@@ -860,6 +880,10 @@ def run_E2_line_tests():
             line_distance = round(May.positive_line_height(May.ts_degree(polynomial)) - May.s_degree(polynomial), 3)
             if abs(line_distance - round(line/2, 3)) > 0.00001:
                 print(line, pair, line_distance)
+                raise ValueError(f"Pair in line {line} with incorrect distance")
+            if not May.is_cycle(May.ring(pair[0])):
+                print(line, pair)
+                raise ValueError(f"Pair in line {line} with non-cycle element")
 
 def run_d3_tests():
     homology_classes = []
