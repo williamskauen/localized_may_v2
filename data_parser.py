@@ -117,18 +117,20 @@ def generate_picture_code(ts_start : int = 1, picture_width : int = 12, max_dist
 
     tikz_code = ["\\begin{tikzpicture}\n"]
 
-    setup_lines = [f"\\draw[black, line width = 0.5mm] (0, 0) -- ({picture_width}, 0);", f"\\draw[black, line width = 0.5mm] (0, 0) -- (0, {picture_height});", f"\\node at ({picture_width / 2}, -1) {{$t - s$}};", f"\\node at (-1, {picture_height / 2}) {{$s$}};"]
+    setup_lines = []
+
+    if localization_amount != 0:
+        line_offset = line_height(ts_start - 1) - max_distance - lowest_y + 1
+        setup_lines.append(f"\\draw[green, line width = 1mm] (0, {line_offset}) -- ({picture_width}, {positive_slope * picture_width + line_offset});")
+        setup_lines.append(f"\\draw[red, line width = 1mm] (0, {max_distance + line_offset}) -- ({picture_width}, {positive_slope * picture_width + max_distance + line_offset});")
+
+    setup_lines += [f"\\draw[black, line width = 0.5mm] (0, 0) -- ({picture_width}, 0);", f"\\draw[black, line width = 0.5mm] (0, 0) -- (0, {picture_height});", f"\\node at ({picture_width / 2}, -1) {{$t - s$}};", f"\\node at (-1, {picture_height / 2}) {{$s$}};"]
 
     for i, j in zip(range(1, picture_width), range(ts_start, ts_start + picture_width - 1)):
         setup_lines.append(f"\\node at ({i}, -0.5) {{{j}}};")
 
     for i, j in zip(range(1, picture_height), range(lowest_y, lowest_y + picture_height - 1)):
         setup_lines.append(f"\\node at (-0.5, {i}) {{{j}}};")
-
-    if localization_amount != 0:
-        line_offset = line_height(ts_start - 1) - max_distance - lowest_y + 1
-        setup_lines.append(f"\\draw[green, line width = 1mm] (0, {line_offset}) -- ({picture_width}, {positive_slope * picture_width + line_offset});")
-        setup_lines.append(f"\\draw[red, line width = 1mm] (0, {max_distance + line_offset}) -- ({picture_width}, {positive_slope * picture_width + max_distance + line_offset});")
 
     for line in setup_lines:
         tikz_code.append(format_line(line))
